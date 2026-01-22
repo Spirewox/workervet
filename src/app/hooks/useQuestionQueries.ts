@@ -3,9 +3,9 @@ import { axiosGet } from "../lib/api";
 import { Question } from "../interface/question.interface";
 
 export interface QBank{
-    "department_id": string,
-    "department_name": string,
-    "question_count": number
+  "department_id": string,
+  "department_name": string,
+  "question_count": number
 }
 
 const fetchQuestionBank = async () => {
