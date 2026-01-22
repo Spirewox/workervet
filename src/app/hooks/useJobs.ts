@@ -8,9 +8,10 @@ const fetchJobs = async () => {
 };
 
 // Custom hook
-export const useJobs = () => {
+export const useJobs = (enabled : boolean) => {
   return useQuery({
     queryKey: ["jobs"],
+    enabled ,
     queryFn: ()=>fetchJobs(),
     retry : false,
   });

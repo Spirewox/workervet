@@ -1,5 +1,5 @@
 import { Edit2, Plus, Trash2 } from "lucide-react";
-import { Department, JobPosting } from "../../types";
+import { JobPosting } from "../../types";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -9,34 +9,101 @@ import { Textarea } from "../ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { addJobPosting, deleteJobPosting, getDepartments, getJobPostings, updateJobPosting } from "../../services/dataStore";
 import {useState} from "react"
+import { useJobs } from "../../hooks/useJobs";
+import { useAuth } from "../../context/AuthContext";
+import { Department } from "../../interface/settings.interface";
+import { useDepartments } from "../../hooks/useSettings";
+import { IJob } from "../../interface/job.interface";
+import { Skeleton } from "../ui/skeleton";
+import { axiosDelete, axiosPatch, axiosPost } from "../../lib/api";
+import { toast } from "react-toastify";
 
 const JobsModule= () => {
+    const {user} = useAuth()
   const jobs = getJobPostings();
-  const departments = getDepartments();
+  const {data : departmentsData} = useDepartments()
   const [isEditing, setIsEditing] = useState(false);
-  const [currentJob, setCurrentJob] = useState<Partial<JobPosting>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentJob, setCurrentJob] = useState<Partial<IJob>>({});
+  const {data : jobsData, isLoading : jobsLoading, refetch : refetchJobs} = useJobs(!!user && user.role == "admin") 
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (currentJob.id) {
-        updateJobPosting(currentJob as JobPosting);
-    } else {
-        addJobPosting({
-            ...currentJob,
-            id: `job-${Date.now()}`,
-            createdAt: new Date().toISOString(),
-            active: true
-        } as JobPosting);
+  const rangeRegex = /^\d*\s?-?\s?\d*$/;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    setIsSubmitting(true)
+    try {
+        e.preventDefault();
+        if (currentJob._id) {
+            await axiosPatch(`jobs/${currentJob._id}`, {...currentJob, salary_range : formatNairaRange(currentJob.salary_range)}, true)
+            toast.success("Job edited successfully")
+        } else {
+            await axiosPost("jobs",{...currentJob, salary_range : formatNairaRange(currentJob.salary_range)},true)
+            toast.success("Job posted successfully")
+        }
+        refetchJobs()
+        setIsEditing(false);
+        setCurrentJob({});
+    } catch (error) {
+        console.log(error)
+        toast.error(error.message)
+    }finally{
+        setIsSubmitting(false)
     }
-    setIsEditing(false);
-    setCurrentJob({});
+    
   };
 
-  const handleDelete = (id: string) => {
-      if (confirm('Are you sure you want to delete this job posting?')) {
-          deleteJobPosting(id);
-      }
+  const handleDelete = async (id: string) => {
+    try {
+        if (confirm('Are you sure you want to delete this job posting?')) {
+          await axiosDelete(`jobs/${id}`,true)
+        }
+        toast.success("Job deleted successfully")
+    } catch (error) {
+        toast.error("Job deleted successfully")
+    }
+      
   };
+
+  const formatNairaRange = (range: string) => {
+    if (!rangeRegex.test(range)) return;
+    const [min, max] = range.split("-").map(v => Number(v.trim()));
+
+    const format = (n: number) =>
+        `₦${(n / 1000).toFixed(0)}k`;
+
+    return `${format(min)} - ${format(max)}`;
+    };
+
+    const normalizeSalaryInput = (value: string): string => {
+        // Split by hyphen
+        const parts = value.split("-").map(part => part.trim());
+
+        const convert = (v: string) => {
+        // Remove currency symbols
+        v = v.replace(/[₦$,]/g, "").toLowerCase();
+
+        let multiplier = 1;
+
+        if (v.endsWith("k")) {
+            multiplier = 1000;
+            v = v.slice(0, -1);
+        } else if (v.endsWith("m")) {
+            multiplier = 1000000;
+            v = v.slice(0, -1);
+        }
+
+        const num = parseFloat(v);
+
+        if (isNaN(num)) return "";
+
+        return Math.round(num * multiplier).toString();
+        };
+
+        // Convert each side
+        const normalizedParts = parts.map(convert).filter(Boolean);
+
+        return normalizedParts.join(" - ");
+        };
 
   return (
     <div className="space-y-6">
@@ -61,15 +128,15 @@ const JobsModule= () => {
                           <div className="space-y-2">
                               <Label>Job Title</Label>
                               <Input 
-                                  value={currentJob.title || ''} 
-                                  onChange={e => setCurrentJob({...currentJob, title: e.target.value})}
+                                  value={currentJob.job_title || ''} 
+                                  onChange={e => setCurrentJob({...currentJob, job_title: e.target.value})}
                                   required
                               />
                           </div>
                           <div className="space-y-2">
                               <Label>Department</Label>
                               <Select 
-                                  value={currentJob.department || ''}
+                                  value={currentJob?.department || ''}
                                   onValueChange={val => setCurrentJob({...currentJob, department: val as Department})}
                                   required
                               >
@@ -77,7 +144,7 @@ const JobsModule= () => {
                                       <SelectValue placeholder="Select Department..." />
                                   </SelectTrigger>
                                   <SelectContent>
-                                      {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                      {departmentsData.map(d => <SelectItem key={d._id} value={d._id}>{d.department_name}</SelectItem>)}
                                   </SelectContent>
                               </Select>
                           </div>
@@ -86,8 +153,8 @@ const JobsModule= () => {
                       <div className="space-y-2">
                           <Label>Description</Label>
                           <Textarea 
-                              value={currentJob.description || ''} 
-                              onChange={e => setCurrentJob({...currentJob, description: e.target.value})}
+                              value={currentJob.job_description || ''} 
+                              onChange={e => setCurrentJob({...currentJob, job_description: e.target.value})}
                               required
                               className="min-h-[100px]"
                           />
@@ -116,9 +183,19 @@ const JobsModule= () => {
                           <div className="space-y-2">
                               <Label>Salary Range</Label>
                               <Input 
-                                  value={currentJob.salaryRange || ''} 
-                                  onChange={e => setCurrentJob({...currentJob, salaryRange: e.target.value})}
-                                  placeholder="e.g. $80k - $100k"
+                                value={!rangeRegex.test(currentJob.salary_range) ? normalizeSalaryInput(currentJob.salary_range)  : currentJob.salary_range || ''} 
+                                onChange={(e) => {
+                                    const value = e.target.value;
+
+                                    // Allow only numeric range format while typing
+                                    if (!rangeRegex.test(value)) return;
+
+                                    setCurrentJob({
+                                    ...currentJob,
+                                    salary_range: value
+                                    });
+                                }}
+                                placeholder="e.g. $80k - $100k"
                               />
                           </div>
                       </div>
@@ -132,29 +209,31 @@ const JobsModule= () => {
           </Card>
       ) : (
         <div className="grid gap-4">
-            {jobs.map(job => (
-                <div key={job.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex justify-between items-start group hover:border-blue-200 transition-all">
+            {
+            jobsLoading ? <JobCardSkeleton/> :
+            jobsData?.map(job => (
+                <div key={job._id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex justify-between items-start group hover:border-blue-200 transition-all">
                     <div>
                         <div className="flex items-center gap-3 mb-1">
-                            <h3 className="font-bold text-lg text-slate-900">{job.title}</h3>
-                            <Badge variant={job.active ? 'success' : 'secondary'} className="text-[10px]">
-                                {job.active ? 'ACTIVE' : 'INACTIVE'}
+                            <h3 className="font-bold text-lg text-slate-900">{job.job_title}</h3>
+                            <Badge variant={job.is_active ? 'success' : 'secondary'} className="text-[10px]">
+                                {job.is_active ? 'ACTIVE' : 'INACTIVE'}
                             </Badge>
                         </div>
-                        <p className="text-sm text-slate-500 mb-3">{job.department} • {job.location}</p>
-                        <p className="text-sm text-slate-600 line-clamp-2 max-w-2xl">{job.description}</p>
+                        <p className="text-sm text-slate-500 mb-3">{(job?.department as Department)?.department_name} • {job.location}</p>
+                        <p className="text-sm text-slate-600 line-clamp-2 max-w-2xl">{job.job_description}</p>
                     </div>
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="outline" size="sm" onClick={() => { setCurrentJob(job); setIsEditing(true); }}>
+                        <Button variant="outline" size="sm" onClick={() => { setCurrentJob({...job, department : (job.department as Department)._id}); setIsEditing(true); }}>
                             <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDelete(job.id)}>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(job._id)}>
                             <Trash2 className="w-4 h-4" />
                         </Button>
                     </div>
                 </div>
             ))}
-            {jobs.length === 0 && (
+            {jobsData?.length === 0 && (
                 <div className="text-center py-12 bg-white rounded-xl border border-dashed border-slate-200">
                     <p className="text-slate-500">No jobs posted yet.</p>
                 </div>
@@ -166,3 +245,26 @@ const JobsModule= () => {
 };
 
 export default JobsModule
+
+
+function JobCardSkeleton() {
+  return (
+    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex justify-between items-start">
+      <div className="w-full">
+        <div className="flex items-center gap-3 mb-2">
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-4 w-14 rounded-full" />
+        </div>
+
+        <Skeleton className="h-4 w-64 mb-3" />
+        <Skeleton className="h-4 w-full max-w-2xl mb-1" />
+        <Skeleton className="h-4 w-5/6 max-w-2xl" />
+      </div>
+
+      <div className="flex gap-2">
+        <Skeleton className="h-8 w-8 rounded-md" />
+        <Skeleton className="h-8 w-8 rounded-md" />
+      </div>
+    </div>
+  );
+}

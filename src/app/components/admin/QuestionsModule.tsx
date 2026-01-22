@@ -32,7 +32,6 @@ const QuestionsModule = () => {
   const {data : skillsData} = useSkills()
   const {data : departmentsData} = useDepartments()
   const {data : departmentQuestions,refetch : refetchDeptQ} = useDepartmentQuestions(selectedDept?.department_id)
-  const [questions, setQuestions] = useState(getPresetQuestions());
   const [departments, setDepartments] = useState(getDepartments());
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
