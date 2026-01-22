@@ -110,3 +110,26 @@ export const useCandidateAssessmentHistory = (id : string) => {
     retry : false,
   });
 };
+
+export interface AssessmentRe {
+    "participant_name": string,
+    "job_department": string,
+    "percentage": number,
+    "result": "pass" | "fail",
+    "submitted_at": Date | null
+}
+
+const fetchRecentAssessments = async () => {
+  const response = await axiosGet(`assessment/recent`, true);
+  return response as AssessmentRe[]
+};
+
+// Custom hook
+export const useRecentAssessments= (enabled : boolean) => {
+  return useQuery({
+    queryKey: ["assessments", ],
+    enabled,
+    queryFn: ()=>fetchRecentAssessments(),
+    retry : false,
+  });
+};

@@ -5,10 +5,15 @@ import { StatCard } from "../AdminDashboard";
 import { SKILLS } from "../../types";
 import { Badge } from "../ui/badge";
 import { useGlobalSkillPerformance } from "../../hooks/useDashboard";
+import { useAuth } from "../../context/AuthContext";
+import { useRecentAssessments } from "../../hooks/useCandidates";
 
 const DashboardOverviewModule: React.FC = () => {
+  const {user} = useAuth()
   const users = getUsers();
   const jobs = getJobPostings();
+
+  const {data : assementData, isLoading : assessmentLoading} = useRecentAssessments(!!user && user.role == "admin")
   const allAssessments = users.flatMap(u => u.assessments.map(a => ({ ...a, userName: u.name, userEmail: u.email })));
   
   // Calculate Stats
@@ -115,21 +120,24 @@ const DashboardOverviewModule: React.FC = () => {
            </CardHeader>
            <CardContent className="px-0">
              <div className="space-y-0 divide-y divide-slate-100">
-                {recentActivity.length === 0 ? (
+                {
+                  assessmentLoading ? Array.from({ length: 6 }).map((_, i) => (
+                    <AssessmentActivitySkeleton key={i} />
+                  )) : assementData.length === 0 ? (
                   <div className="p-4 text-center text-slate-400 text-sm">No recent activity.</div>
                 ) : (
-                  recentActivity.map((activity, i) => (
+                  assementData.map((activity, i) => (
                     <div key={i} className="p-4 hover:bg-white transition-colors flex items-start gap-3">
-                       <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${activity.passed ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                       <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${activity.result == "pass" ? 'bg-emerald-500' : 'bg-red-500'}`} />
                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate">{activity.userName}</p>
-                          <p className="text-xs text-slate-500 truncate">{activity.department}</p>
+                          <p className="text-sm font-medium text-slate-900 truncate">{activity?.participant_name}</p>
+                          <p className="text-xs text-slate-500 truncate">{activity.job_department}</p>
                        </div>
                        <div className="text-right">
-                          <Badge variant={activity.passed ? 'success' : 'destructive'} className="text-[10px] h-5 px-1.5">
-                            {Math.round((activity.score / activity.totalQuestions) * 100)}%
+                          <Badge variant={activity.result == "pass" ? 'success' : 'destructive'} className="text-[10px] h-5 px-1.5">
+                            {activity?.percentage}%
                           </Badge>
-                          <p className="text-[10px] text-slate-400 mt-1">{new Date(activity.date).toLocaleDateString()}</p>
+                          <p className="text-[10px] text-slate-400 mt-1">{new Date(activity?.submitted_at).toLocaleDateString()}</p>
                        </div>
                     </div>
                   ))
@@ -193,3 +201,25 @@ const SkillCardSkeleton = () => (
     <div className="h-3 w-20 bg-slate-300 rounded" />
   </div>
 );
+
+
+function AssessmentActivitySkeleton() {
+  return (
+    <div className="p-4 flex items-start gap-3 animate-pulse">
+      {/* Status dot */}
+      <div className="mt-1 w-2 h-2 rounded-full bg-slate-300 flex-shrink-0" />
+
+      {/* Name + department */}
+      <div className="flex-1 min-w-0 space-y-1">
+        <div className="h-3 w-32 bg-slate-200 rounded" />
+        <div className="h-3 w-24 bg-slate-200 rounded" />
+      </div>
+
+      {/* Percentage badge + date */}
+      <div className="text-right space-y-1">
+        <div className="h-5 w-10 bg-slate-200 rounded-full ml-auto" />
+        <div className="h-3 w-16 bg-slate-200 rounded ml-auto" />
+      </div>
+    </div>
+  );
+}
