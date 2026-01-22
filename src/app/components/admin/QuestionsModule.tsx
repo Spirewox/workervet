@@ -22,15 +22,16 @@ import { useDepartments, useSkills } from '../../hooks/useSettings';
 import { Question } from '../../interface/question.interface';
 import { Skill } from '../../interface/settings.interface';
 import { ImportPreview } from './ImportPreview';
+import { axiosDelete, axiosPatch, axiosPost } from '../../lib/api';
+import { toast } from 'react-toastify';
 
 
 const QuestionsModule = () => {
   const [selectedDept, setSelectedDept] = useState<QBank | null>(null);
-  const {data : questionsData,isLoading : questionDeptLoading} = useQuestionBank()
+  const {data : questionsData,isLoading : questionDeptLoading,refetch : refetchQBank} = useQuestionBank()
   const {data : skillsData} = useSkills()
   const {data : departmentsData} = useDepartments()
-  const {data : departmentQuestions} = useDepartmentQuestions(selectedDept?.department_id)
-  console.log(questionsData)
+  const {data : departmentQuestions,refetch : refetchDeptQ} = useDepartmentQuestions(selectedDept?.department_id)
   const [questions, setQuestions] = useState(getPresetQuestions());
   const [departments, setDepartments] = useState(getDepartments());
   const [isAdding, setIsAdding] = useState(false);
@@ -40,18 +41,20 @@ const QuestionsModule = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importedQuestions, setImportedQuestions] = useState<Question[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [isSubmittingImport, setIsSubmittingImport] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [newQuestion, setNewQuestion] = useState<Partial<Question>>({
-    options: ["", "", "", ""],
+    options: [{content : ""},{content : ""}],
     correct_option_index: 0,
-    department: undefined,
+    department: selectedDept?.department_id,
     time_seconds: 30
   });
 
 
   const refreshData = () => {
-    setQuestions(getPresetQuestions());
-    setDepartments(getDepartments());
+    refetchDeptQ()
+    refetchQBank()
   };
 
   const resetForm = () => {
@@ -68,43 +71,65 @@ const QuestionsModule = () => {
   };
 
   const handleEdit = (q: Question) => {
+    console.log(q)
     setNewQuestion({...q});
     setEditingId(q._id);
     setIsAdding(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this question?")) {
-        removePresetQuestion(id);
+  const handleDelete = async(id: string) => {
+    try {
+      if (confirm("Are you sure you want to delete this question?")) {
+        await axiosDelete(`questions/${id}`,true)
+        toast.success("Question deleted successfully")
         refreshData();
+      }
+    } catch (error) {
+      console.log(error)
+      toast.error("An error occurred while trying to delete question")
     }
+    
   };
 
-  const handleSave = () => {
-    if (!newQuestion.scenario || !newQuestion.questionText || !newQuestion.skill) return;
+  const handleSave = async () => {
+    setIsSubmitting(true)
+    try {
+      if (!newQuestion.scenario || !newQuestion.question_text || !newQuestion.skill_category) return;
     
-    if (editingId) {
-      // Update
-      const q: Question = {
-        ...newQuestion as Question,
-        _id: editingId,
-      };
-    } else {
-      // Add
-      const q: Question = {
-        skill_category: newQuestion.skill,
-        scenario: newQuestion.scenario,
-        question_text: newQuestion.questionText,
-        options: newQuestion.options,
-        correct_option_index: newQuestion.correctOptionIndex || 0,
-        department: newQuestion.department,
-        time_seconds: newQuestion.timeLimit || 30,
-      };
+      if (editingId) {
+        // Update
+        const q: Question = {
+          ...newQuestion as Question,
+          _id: editingId,
+        };
+
+        await axiosPatch(`questions/${editingId}`, q,true)
+      } else {
+        // Add
+        const q: Question = {
+          skill_category: newQuestion.skill,
+          scenario: newQuestion.scenario,
+          question_text: newQuestion.questionText,
+          options: newQuestion.options,
+          correct_option_index: newQuestion.correctOptionIndex || 0,
+          department: newQuestion.department,
+          time_seconds: newQuestion.timeLimit || 30,
+        };
+
+        await axiosPost('question',q,true)
+      }
+
+      toast.success("Question data submitted successfully")
+      
+      refreshData();
+      resetForm();
+    } catch (error) {
+      console.log(error)
+      toast.error("An error occurred while trying to submit your request")
+    }finally{
+      setIsSubmitting(false)
     }
-    
-    refreshData();
-    resetForm();
   };
 
   // --- File Import Logic ---
@@ -165,7 +190,7 @@ const QuestionsModule = () => {
                 row['Option 2'] || row['option2'] || '',
                 row['Option 3'] || row['option3'] || '',
                 row['Option 4'] || row['option4'] || ''
-              ].filter(o => o !== '');
+              ].filter(o => o !== '').map(o => ({ content: o }));;
 
               let correctIndex = 0;
               const ansRaw = row['Answer'] || row['answer'] || row['Correct'] || row['correct'];
@@ -182,7 +207,6 @@ const QuestionsModule = () => {
 
               if (options.length >= 2) {
                  const q: Question = {
-                   _id: `imp-xls-${Date.now()}-${count}`,
                    skill_category: skill as Skill,
                    scenario: scenario,
                    question_text: qText,
@@ -314,9 +338,22 @@ const QuestionsModule = () => {
       <ImportPreview
         initialQuestions={importedQuestions}
         skillsData={skillsData}
+        isSubmittingImport={isSubmittingImport}
         departmentsData={departmentsData}
         onCancel={() => setShowPreview(false)}
-        onSubmitAll={(finalQuestions) => {
+        onSubmitAll={async(finalQuestions) => {
+          setIsSubmittingImport(true)
+          try {
+            await axiosPost('questions/bulk', finalQuestions,true )
+            toast.success("Questions Uploaded Successfully")
+            refreshData();
+            setShowPreview(false)
+          } catch (error) {
+            console.log(error)
+            toast.error(error.message)
+          }finally{
+            setIsSubmittingImport(false)
+          }
           // 🔥 API call here
           // submitBulkQuestions(finalQuestions);
     }}
@@ -348,7 +385,7 @@ const QuestionsModule = () => {
             <CardHeader className="pb-3 flex flex-row items-start justify-between">
                <div>
                  <CardTitle className="text-lg">Import Questions</CardTitle>
-                 <CardDescription>Upload a Word (.docx) or Excel (.xlsx) file with mixed department questions.</CardDescription>
+                 <CardDescription>Upload Excel (.xlsx) file with mixed department questions.</CardDescription>
                </div>
                <div className="flex gap-2">
                  <Button variant="outline" size="sm" onClick={downloadTemplate} className="gap-2">
@@ -365,7 +402,7 @@ const QuestionsModule = () => {
                     <Input 
                       type="file" 
                       ref={fileInputRef}
-                      accept=".xlsx,.xls,.docx" 
+                      accept=".xlsx,.xls" 
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       onChange={handleFileUpload}
                     />
@@ -374,7 +411,7 @@ const QuestionsModule = () => {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-slate-900">Click to upload or drag and drop</p>
-                      <p className="text-xs text-slate-500 mt-1">Supports .xlsx and .docx</p>
+                      <p className="text-xs text-slate-500 mt-1">Supports .xlsx</p>
                     </div>
                  </div>
   
@@ -384,9 +421,9 @@ const QuestionsModule = () => {
                       {importStatus}
                    </div>
                  )}
-                 <div className="text-xs text-slate-500 text-center bg-white p-3 rounded border border-slate-100">
+                 {/* <div className="text-xs text-slate-500 text-center bg-white p-3 rounded border border-slate-100">
                     <span className="font-semibold">Format Guide:</span> Excel: "Department", "Skill", "Scenario", "Question", "Option 1-4", "Correct", "Time Limit". Word: "Department:", "Skill:", "Time:", etc.
-                 </div>
+                 </div> */}
                </div>
             </CardContent>
           </Card>
@@ -457,7 +494,12 @@ const QuestionsModule = () => {
              {isImporting ? <X className="w-4 h-4 mr-2" /> : <Upload className="w-4 h-4 mr-2" />} 
              {isImporting ? 'Close Import' : 'Import'}
           </Button>
-          <Button onClick={() => { resetForm(); setIsAdding(!isAdding); }}>
+          <Button onClick={() => {
+            console.log("here")
+            resetForm(); 
+            setIsAdding(!isAdding);
+            setNewQuestion({...newQuestion, department: selectedDept.department_id})
+          }}>
             {isAdding ? <X className="w-4 h-4 mr-2"/> : <Plus className="w-4 h-4 mr-2" />} 
             {isAdding ? 'Close Form' : 'Add Question'}
           </Button>
@@ -495,7 +537,7 @@ const QuestionsModule = () => {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-slate-900">Click to upload or drag and drop</p>
-                      <p className="text-xs text-slate-500 mt-1">Supports .xlsx and .docx</p>
+                      <p className="text-xs text-slate-500 mt-1">Supports .xlsx</p>
                     </div>
                  </div>
   
@@ -536,7 +578,7 @@ const QuestionsModule = () => {
                  <Label>Department</Label>
                  <Select 
                    onValueChange={(val) => setNewQuestion({...newQuestion, department : val})}
-                   value={newQuestion.department }
+                   value={newQuestion.department}
                    disabled={true} 
                  >
                    <SelectTrigger>
@@ -586,19 +628,43 @@ const QuestionsModule = () => {
                   <div key={idx} className="flex gap-2 items-center">
                     <Input 
                       placeholder={`Option ${idx + 1}`}
-                      value={opt}
+                      value={opt.content}
                       onChange={(e) => {
                         const newOpts = [...(newQuestion.options || [])];
-                        newOpts[idx] = e.target.value;
+                        newOpts[idx].content = e.target.value;
                         setNewQuestion({...newQuestion, options: newOpts});
                       }}
                     />
                     <Button
                       type="button"
                       size="icon"
-                      variant={idx === newQuestion.correct_option_index ? "default" : "outline"}
-                      onClick={() => setNewQuestion({...newQuestion, correct_option_index: idx})}
-                      className={idx === newQuestion.correct_option_index ? "bg-emerald-600 hover:bg-emerald-700" : ""}
+                      variant={
+                        // Use id if available, otherwise fall back to index
+                        newQuestion.correct_option_id
+                          ? opt.id === newQuestion.correct_option_id
+                            ? "default"
+                            : "outline"
+                          : idx === newQuestion.correct_option_index
+                          ? "default"
+                          : "outline"
+                      }
+                      onClick={() => {
+                        // Set either id (if exists) or index
+                        if (opt._id) {
+                          setNewQuestion({ ...newQuestion, correct_option_id: opt.id,correct_option_index: idx });
+                        } else {
+                          setNewQuestion({ ...newQuestion, correct_option_index: idx });
+                        }
+                      }}
+                      className={
+                        newQuestion.correct_option_id
+                          ? opt._id === newQuestion.correct_option_id
+                            ? "bg-emerald-600 hover:bg-emerald-700"
+                            : ""
+                          : idx === newQuestion.correct_option_index
+                          ? "bg-emerald-600 hover:bg-emerald-700"
+                          : ""
+                      }
                       title="Mark as Correct"
                     >
                       <CheckCircle className="w-4 h-4" />
@@ -610,7 +676,7 @@ const QuestionsModule = () => {
 
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="ghost" onClick={resetForm}>Cancel</Button>
-              <Button onClick={handleSave}>{editingId ? 'Update' : 'Save'} Question</Button>
+              <Button onClick={handleSave} disabled={isSubmitting}>{isSubmitting ? "Submitting..." : editingId ? 'Update Question' : 'Save Question'}</Button>
             </div>
           </CardContent>
         </Card>
