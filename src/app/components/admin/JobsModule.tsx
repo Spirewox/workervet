@@ -76,7 +76,7 @@ const JobsModule= () => {
 
     const normalizeSalaryInput = (value: string): string => {
         // Split by hyphen
-        const parts = value.split("-").map(part => part.trim());
+        const parts = value?.split("-").map(part => part.trim());
 
         const convert = (v: string) => {
         // Remove currency symbols
@@ -100,10 +100,10 @@ const JobsModule= () => {
         };
 
         // Convert each side
-        const normalizedParts = parts.map(convert).filter(Boolean);
+        const normalizedParts = parts?.map(convert)?.filter(Boolean);
 
-        return normalizedParts.join(" - ");
-        };
+        return normalizedParts?.join(" - ");
+    };
 
   return (
     <div className="space-y-6">
