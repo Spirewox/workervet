@@ -1,36 +1,31 @@
 import {
-  getPresetQuestions, 
-  addPresetQuestion, 
-  updatePresetQuestion,
-  removePresetQuestion, 
   getDepartments,
 } from '../../services/dataStore';
 import {useState, useRef} from "react"
 import * as XLSX from 'xlsx';
-import mammoth from 'mammoth';
 import { Badge } from '../ui/badge';
-import { AlertCircle, ArrowLeft, Briefcase, CheckCircle, Clock, DollarSign, Edit2, FileSpreadsheet, FileText, Layers, LayoutGrid, Plus, Trash2, Upload, X } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle, Clock, DollarSign, Edit2, FileSpreadsheet, FileText, Plus, Trash2, Upload, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Department } from '../../types';
 import { QBank, useDepartmentQuestions, useQuestionBank } from '../../hooks/useQuestionQueries';
 import { useDepartments, useSkills } from '../../hooks/useSettings';
 import { Question } from '../../interface/question.interface';
-import { Skill } from '../../interface/settings.interface';
+import { Department, Skill } from '../../interface/settings.interface';
 import { ImportPreview } from './ImportPreview';
 import { axiosDelete, axiosPatch, axiosPost } from '../../lib/api';
 import { toast } from 'react-toastify';
+import ExcelJS from "exceljs";
 
 
 const QuestionsModule = () => {
   const [selectedDept, setSelectedDept] = useState<QBank | null>(null);
   const {data : questionsData,isLoading : questionDeptLoading,refetch : refetchQBank} = useQuestionBank()
-  const {data : skillsData} = useSkills()
-  const {data : departmentsData} = useDepartments()
+  const {data : skillsData} = useSkills();
+  const {data : departmentsData} = useDepartments();
   const {data : departmentQuestions,refetch : refetchDeptQ} = useDepartmentQuestions(selectedDept?.department_id)
   const [departments, setDepartments] = useState(getDepartments());
   const [isAdding, setIsAdding] = useState(false);
@@ -321,13 +316,151 @@ const QuestionsModule = () => {
   // };
 
 
-  const downloadTemplate = () => {
-    const headers = ["Department", "Skill", "Scenario", "Question", "Option 1", "Option 2", "Option 3", "Option 4", "Correct", "Explanation", "Time Limit"];
-    const sampleRow = ["Sales", "Trust", "Client issue scenario...", "What to do?", "Act", "Decline", "Ignore", "Consult", 2, "Reasoning...", 45];
-    const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Questions Template");
-    XLSX.writeFile(wb, "Workervet_Question_Template.xlsx");
+  // const downloadTemplate = () => {
+  //   const headers = ["Department", "Skill", "Scenario", "Question", "Option 1", "Option 2", "Option 3", "Option 4", "Correct", "Explanation", "Time Limit"];
+  //   const sampleRow = ["Sales", "Trust", "Client issue scenario...", "What to do?", "Act", "Decline", "Ignore", "Consult", 2, "Reasoning...", 45];
+  //   const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
+  //   const wb = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(wb, ws, "Questions Template");
+  //   XLSX.writeFile(wb, "Workervet_Question_Template.xlsx");
+  // };
+
+  // const downloadTemplate = (
+  //   departments: Department[] = [],
+  //   skills: Skill[] = []
+  // ) => {
+  //   const headers = [
+  //     "Department",
+  //     "Skill",
+  //     "Scenario",
+  //     "Question",
+  //     "Option 1",
+  //     "Option 2",
+  //     "Option 3",
+  //     "Option 4",
+  //     "Correct",
+  //     "Explanation",
+  //     "Time Limit"
+  //   ];
+
+  //   const sampleRow = [
+  //     departments[0]?.department_name || "",
+  //     skills[0]?.skill_name || "",
+  //     "Client issue scenario...",
+  //     "What should the employee do?",
+  //     "Act",
+  //     "Decline",
+  //     "Ignore",
+  //     "Consult",
+  //     2,
+  //     "Reasoning...",
+  //     45
+  //   ];
+
+  //   const mainWs = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
+
+  //   const deptSheetData = [
+  //     ["Department ID", "Department Name"],
+  //     ...departments.map(d => [d._id, d.department_name])
+  //   ];
+  //   const deptWs = XLSX.utils.aoa_to_sheet(deptSheetData);
+
+  //   const skillSheetData = [
+  //     ["Skill ID", "Skill Name"],
+  //     ...skills.map(s => [s._id, s.skill_name])
+  //   ];
+  //   const skillWs = XLSX.utils.aoa_to_sheet(skillSheetData);
+
+  //   const deptRange = `Departments!$B$2:$B$${departments.length + 1}`;
+  //   const skillRange = `Skills!$B$2:$B$${skills.length + 1}`;
+
+  //   mainWs["!dataValidation"] = [
+  //     {
+  //       type: "list",
+  //       allowBlank: true,
+  //       sqref: "A2:A1000",
+  //       formulas: [deptRange]
+  //     },
+  //     {
+  //       type: "list",
+  //       allowBlank: true,
+  //       sqref: "B2:B1000", 
+  //       formulas: [skillRange]
+  //     }
+  //   ];
+
+  //   // ======================
+  //   // Workbook
+  //   // ======================
+  //   const wb = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(wb, mainWs, "Questions Template");
+  //   XLSX.utils.book_append_sheet(wb, deptWs, "Departments");
+  //   XLSX.utils.book_append_sheet(wb, skillWs, "Skills");
+
+  //   XLSX.writeFile(wb, "Workervet_Question_Template.xlsx");
+  // };
+
+
+  const downloadTemplate = async (
+    departments: Department[] = [],
+    skills: Skill[] = []
+  ) => {
+    const workbook = new ExcelJS.Workbook();
+
+    const sheet = workbook.addWorksheet("Questions Template");
+    const deptSheet = workbook.addWorksheet("Departments");
+    const skillSheet = workbook.addWorksheet("Skills");
+
+    sheet.addRow([
+      "Department",
+      "Skill",
+      "Scenario",
+      "Question",
+      "Option 1",
+      "Option 2",
+      "Option 3",
+      "Option 4",
+      "Correct",
+      "Explanation",
+      "Time Limit"
+    ]);
+
+    deptSheet.addRow(["Department ID", "Department Name"]);
+    departments.forEach(d =>
+      deptSheet.addRow([d._id, d.department_name])
+    );
+
+    skillSheet.addRow(["Skill ID", "Skill Name"]);
+    skills.forEach(s =>
+      skillSheet.addRow([s._id, s.skill_name])
+    );
+
+    const deptRange = `Departments!$B$2:$B$${departments.length + 1}`;
+    const skillRange = `Skills!$B$2:$B$${skills.length + 1}`;
+
+    for (let i = 2; i <= 1000; i++) {
+      sheet.getCell(`A${i}`).dataValidation = {
+        type: "list",
+        allowBlank: true,
+        formulae: [deptRange]
+      };
+
+      sheet.getCell(`B${i}`).dataValidation = {
+        type: "list",
+        allowBlank: true,
+        formulae: [skillRange]
+      };
+    }
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    });
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "Workervet_Question_Template.xlsx";
+    link.click();
   };
 
   // --- Render Views ---
@@ -387,7 +520,7 @@ const QuestionsModule = () => {
                  <CardDescription>Upload Excel (.xlsx) file with mixed department questions.</CardDescription>
                </div>
                <div className="flex gap-2">
-                 <Button variant="outline" size="sm" onClick={downloadTemplate} className="gap-2">
+                 <Button variant="outline" size="sm" onClick={()=>downloadTemplate(departmentsData, skillsData)} className="gap-2">
                    <FileSpreadsheet className="w-4 h-4" /> Download Template
                  </Button>
                  <Button variant="ghost" size="sm" onClick={() => setIsImporting(false)} className="text-slate-500 hover:text-red-500">

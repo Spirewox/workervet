@@ -17,15 +17,28 @@ import { IJob } from "../../interface/job.interface";
 import { Skeleton } from "../ui/skeleton";
 import { axiosDelete, axiosPatch, axiosPost } from "../../lib/api";
 import { toast } from "react-toastify";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../ui/pagination";
 
 const JobsModule= () => {
     const {user} = useAuth()
   const jobs = getJobPostings();
+  const [page , setPage] = useState(1)
+const limit = 20
   const {data : departmentsData} = useDepartments()
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentJob, setCurrentJob] = useState<Partial<IJob>>({});
-  const {data : jobsData, isLoading : jobsLoading, refetch : refetchJobs} = useJobs(!!user && user.role == "admin") 
+  const {data : jobsData, isLoading : jobsLoading, refetch : refetchJobs} = useJobs(!!user && user.role == "admin",{page, limit}) 
+const totalPages = jobsData?.meta?.totalPages || 1;
+
+  // Function to generate an array of page numbers with ellipsis
+  const getPageNumbers = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   const rangeRegex = /^\d*\s?-?\s?\d*$/;
 
@@ -211,7 +224,7 @@ const JobsModule= () => {
         <div className="grid gap-4">
             {
             jobsLoading ? <JobCardSkeleton/> :
-            jobsData?.map(job => (
+            jobsData?.data?.map(job => (
                 <div key={job._id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex justify-between items-start group hover:border-blue-200 transition-all">
                     <div>
                         <div className="flex items-center gap-3 mb-1">
@@ -233,11 +246,38 @@ const JobsModule= () => {
                     </div>
                 </div>
             ))}
-            {jobsData?.length === 0 && (
+            {jobsData?.data?.length === 0 && (
                 <div className="text-center py-12 bg-white rounded-xl border border-dashed border-slate-200">
                     <p className="text-slate-500">No jobs posted yet.</p>
                 </div>
             )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <Pagination className="mt-6">
+                <PaginationPrevious
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                />
+                <PaginationContent>
+                    {getPageNumbers().map((num) => (
+                    <PaginationItem key={num}>
+                        <PaginationLink
+                        isActive={num === page}
+                        onClick={() => setPage(num)}
+                        >
+                        {num}
+                        </PaginationLink>
+                    </PaginationItem>
+                    ))}
+                </PaginationContent>
+                <PaginationNext
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                />
+                </Pagination>
+            )}
+
         </div>
       )}
     </div>

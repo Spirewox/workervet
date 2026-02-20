@@ -4,9 +4,9 @@ import { getDepartments, getJobPostings, getUsers } from "../../services/dataSto
 import { StatCard } from "../AdminDashboard";
 import { SKILLS } from "../../types";
 import { Badge } from "../ui/badge";
-import { useGlobalSkillPerformance } from "../../hooks/useDashboard";
+import { useDashboardMetrics, useGlobalSkillPerformance } from "../../hooks/useDashboard";
 import { useAuth } from "../../context/AuthContext";
-import { useRecentAssessments } from "../../hooks/useCandidates";
+import { useDepartmentsPassRate, useRecentAssessments } from "../../hooks/useCandidates";
 
 const DashboardOverviewModule: React.FC = () => {
   const {user} = useAuth()
@@ -14,27 +14,10 @@ const DashboardOverviewModule: React.FC = () => {
   const jobs = getJobPostings();
 
   const {data : assementData, isLoading : assessmentLoading} = useRecentAssessments(!!user && user.role == "admin")
+  const {data : passRates, isLoading : passRatesLoading} = useDepartmentsPassRate(!!user && user.role == "admin")
+  const {data : metric, isLoading : metricLoading} = useDashboardMetrics(!!user && user.role == "admin")
   const allAssessments = users.flatMap(u => u.assessments.map(a => ({ ...a, userName: u.name, userEmail: u.email })));
-  
-  // Calculate Stats
-  const totalCandidates = users.length;
-  const totalAssessments = allAssessments.length;
-  const passedAssessments = allAssessments.filter(a => a.passed).length;
-  const passRate = totalAssessments > 0 ? Math.round((passedAssessments / totalAssessments) * 100) : 0;
-  const activeJobs = jobs.filter(j => j.active).length;
 
-  // Department Stats
-  const departments = getDepartments();
-  const deptStats = departments.map(dept => {
-    const deptAssessments = allAssessments.filter(a => a.department === dept);
-    const total = deptAssessments.length;
-    const passed = deptAssessments.filter(a => a.passed).length;
-    const rate = total > 0 ? Math.round((passed / total) * 100) : 0;
-    return { name: dept, total, passed, rate };
-  }).filter(d => d.total > 0).sort((a, b) => b.total - a.total);
-
-  // Recent Activity
-  const recentActivity = [...allAssessments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
   const {data : performaceSkills,isLoading : performanceSkillsLoading} = useGlobalSkillPerformance()
 
@@ -49,31 +32,31 @@ const DashboardOverviewModule: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           title="Total Candidates" 
-          value={totalCandidates} 
+          value={metric?.totalCandidates} 
           icon={<Users className="w-5 h-5 text-blue-600" />} 
           description="Registered users"
-          trend="+12% this month"
+          trend={`+${metric?.totalCandidatesMoM}% this month`}
           trendUp={true}
         />
         <StatCard 
           title="Assessments Taken" 
-          value={totalAssessments} 
+          value={metric?.assessmentsTaken} 
           icon={<FileText className="w-5 h-5 text-blue-600" />} 
           description="Total completions"
-          trend="+5% this month"
+          trend={`+${metric?.assessmentsPassed}% this month`}
           trendUp={true}
         />
         <StatCard 
           title="Avg. Pass Rate" 
-          value={`${passRate}%`} 
+          value={`${metric?.avgPassRate}%`} 
           icon={<Activity className="w-5 h-5 text-emerald-600" />} 
           description="Across all departments"
-          trend="-2% this month"
+          trend={`${metric?.passRateMoM}% this month`}
           trendUp={false}
         />
         <StatCard  
           title="Active Jobs" 
-          value={activeJobs} 
+          value={metric?.activeJobsCount} 
           icon={<Briefcase className="w-5 h-5 text-purple-600" />} 
           description="Open positions"
           trend="Stable"
@@ -90,20 +73,20 @@ const DashboardOverviewModule: React.FC = () => {
              <CardDescription>Assessment volume and pass rates by department.</CardDescription>
            </CardHeader>
            <CardContent>
-             {deptStats.length === 0 ? (
+             {passRates?.length === 0 ? (
                <div className="h-64 flex items-center justify-center text-slate-400 border border-dashed rounded-lg">
                  No assessment data available yet.
                </div>
              ) : (
                <div className="space-y-6">
-                 {deptStats.map(stat => (
-                   <div key={stat.name} className="space-y-2">
+                 {passRates?.map(stat => (
+                   <div key={stat.department_name} className="space-y-2">
                      <div className="flex justify-between text-sm">
-                       <span className="font-medium text-slate-700">{stat.name}</span>
-                       <span className="text-slate-500">{stat.passed}/{stat.total} passed ({stat.rate}%)</span>
+                       <span className="font-medium text-slate-700">{stat.department_name}</span>
+                       <span className="text-slate-500">{stat.total_passed}/{stat.total_people} passed ({stat.percentage || 0}%)</span>
                      </div>
                      <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
-                        <div className="bg-blue-600 h-full" style={{ width: `${stat.rate}%` }}></div>
+                        <div className="bg-blue-600 h-full" style={{ width: `${stat.percentage || 0}%` }}></div>
                      </div>
                    </div>
                  ))}
@@ -161,7 +144,7 @@ const DashboardOverviewModule: React.FC = () => {
               performanceSkillsLoading ? (
                 Array.from({ length: 6 }).map((_, i) => <SkillCardSkeleton key={i} />)
               ) : performaceSkills && performaceSkills.length > 0 ? (performaceSkills?.map(skill => {
-              const score = skill.average_percentage; // use actual data
+              const score = Number(skill?.average_percentage?.toFixed(2)); // use actual data
               // Determine color based on score
               let color = "text-emerald-600 bg-emerald-50 border-emerald-100";
               if (score < 75) color = "text-amber-600 bg-amber-50 border-amber-100";

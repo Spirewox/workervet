@@ -15,20 +15,23 @@ import UserManagementModule from './components/admin/UserManagement';
 import QuestionsModule from './components/admin/QuestionsModule';
 import JobsModule from './components/admin/JobsModule';
 import SettingsModule from './components/admin/SettingsModule';
+import { DashboardLayout } from './components/candidate/DashboardLayout';
+import { DashboardOverviewPage } from './components/candidate/DashboardOverview';
+import { JobBoardPage } from './components/candidate/JobBoardPage';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { isAuthenticated , loading} = useAuth();
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
-      </div>
-    );
-  }
-  if (!isAuthenticated && !loading) {
-    return <Navigate to="/login" replace />;
-  }
+  // const { isAuthenticated , loading} = useAuth();
+  // if (loading) {
+  //   return (
+  //     <div className="flex h-screen items-center justify-center">
+  //       <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
+  //     </div>
+  //   );
+  // }
+  // if (!isAuthenticated && !loading) {
+  //   return <Navigate to="/login" replace />;
+  // }
   return <>{children}</>;
 };
 
@@ -60,6 +63,35 @@ function AppContent() {
       <Route path="/login" element={<LoginView />} />
       <Route path="/jobs" element={<JobBoardView />} />
       <Route path="/jobs/:jobId" element={<JobLandingView />} />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<DashboardOverviewPage />} />
+        <Route path="jobs" element={<JobBoardPage />} />
+      </Route>
+      {/* <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <DashboardView />
+        </ProtectedRoute>
+      } /> */}
+
+      <Route path="/assessment/:department" element={
+        <ProtectedRoute>
+          <AssessmentView />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/result" element={
+        <ProtectedRoute>
+          <ResultView />
+        </ProtectedRoute>
+      } />
       
       {/* Admin Routes */}
       <Route path="/admin/login" element={<AdminLogin />} />
@@ -80,23 +112,7 @@ function AppContent() {
       </Route>
 
       {/* Protected User Routes */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <DashboardView />
-        </ProtectedRoute>
-      } />
-
-      <Route path="/assessment/:department" element={
-        <ProtectedRoute>
-          <AssessmentView />
-        </ProtectedRoute>
-      } />
-
-      <Route path="/result" element={
-        <ProtectedRoute>
-          <ResultView />
-        </ProtectedRoute>
-      } />
+      
     </Routes>
   );
 }
@@ -106,7 +122,6 @@ export default function App() {
     <BrowserRouter>
     <AuthProvider>
       <ToastContainer />
-      
         <AppContent />
     </AuthProvider>
     </BrowserRouter>

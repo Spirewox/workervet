@@ -20,30 +20,6 @@ export const useWhoAmI = () => {
   });
 };
 
-export interface DashMetRes {
-  "totalCustomers": number,
-  "activeLeads": number,
-  "pipelineValue": number,
-  "openComplaints": number,
-  "customersByLocation":     { "name": string, "customers": number }[],
-  "feedbackBreakdown": { "name": string, "value": number }[],
-}
-
-const fetchDashboardMetrics = async () => {
-  const response = await axiosGet("dashboard/metrics", true);
-  return response as DashMetRes;
-};
-
-// Custom hook
-export const useDashboardMetrics = () => {
-  return useQuery({
-    queryKey: ["dashboard-metrics"], // cache key
-    queryFn: fetchDashboardMetrics,
-    placeholderData : (prev)=> prev,
-    retry : false,
-  });
-};
-
 export interface UserResponse {
   page : number,
   limit : number,

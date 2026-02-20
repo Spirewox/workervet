@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { JobPosting } from '../types';
 import { getJobPostingById } from '../services/dataStore';
@@ -15,25 +15,21 @@ import {
   Share2,
   Loader2
 } from 'lucide-react';
+import { useJobs } from '../hooks/useJobs';
+import { Department } from '../interface/settings.interface';
+import { IJob } from '../interface/job.interface';
 
 export const JobLandingView: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
-  const [job, setJob] = useState<JobPosting | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  const {data : jobs, isLoading : JobLoading} = useJobs(!!jobId,{job : jobId})
   const [showShare, setShowShare] = useState(false);
 
-  useEffect(() => {
-    if (jobId) {
-      const foundJob = getJobPostingById(jobId);
-      setJob(foundJob || null);
-    }
-    setLoading(false);
-  }, [jobId]);
-
-  if (loading) {
+  const job  = useMemo(()=> jobs?.data?.[0] as IJob,[jobs])
+  console.log(job)
+  if (JobLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
@@ -50,7 +46,7 @@ export const JobLandingView: React.FC = () => {
     );
   }
 
-  const isUserCertified = user?.assessments.some(a => a.department === job.department && a.passed);
+  const isUserCertified = job.is_certified
   
   const actionLabel = user 
       ? (isUserCertified ? "Apply Now" : "Take Assessment") 
@@ -66,7 +62,7 @@ export const JobLandingView: React.FC = () => {
     if (isUserCertified) {
         alert("Application Submitted!");
     } else {
-        navigate(`/assessment/${encodeURIComponent(job.department)}`);
+        navigate(`/assessment/${encodeURIComponent((job.department as Department)._id )}`);
     }
   };
 
@@ -98,16 +94,16 @@ export const JobLandingView: React.FC = () => {
         <div className="mb-10">
            <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-900 font-bold text-lg">
-                  {job.department.substring(0,2).toUpperCase()}
+                  {(job.department as Department)?.department_name?.substring(0,2).toUpperCase()}
               </div>
-              <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-none px-3 py-1">{job.department}</Badge>
+              <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-none px-3 py-1">{(job.department as Department)?.department_name}</Badge>
            </div>
            
-           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-6">{job.title}</h1>
+           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-6">{job.job_title}</h1>
            
            <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-500 font-medium">
               <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-slate-400" /> {job.location}</span>
-              {job.salaryRange && <span className="flex items-center gap-2"><DollarSign className="w-4 h-4 text-slate-400" /> {job.salaryRange}</span>}
+              {job.salary_range && <span className="flex items-center gap-2"> {job.salary_range}</span>}
               <span className="flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400" /> Posted {new Date(job.createdAt).toLocaleDateString()}</span>
            </div>
         </div>
@@ -116,10 +112,10 @@ export const JobLandingView: React.FC = () => {
            <div className="space-y-10">
               <section>
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">About the role</h3>
-                <p className="text-slate-600 leading-relaxed whitespace-pre-line text-lg">{job.description}</p>
+                <p className="text-slate-600 leading-relaxed whitespace-pre-line text-lg">{job.job_description}</p>
               </section>
 
-              {job.requirements && (
+              {job?.requirements && (
                 <section>
                   <h3 className="text-lg font-semibold text-slate-900 mb-4">Requirements</h3>
                   <div className="text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50 rounded-2xl p-6 border border-slate-100">

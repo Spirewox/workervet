@@ -35,19 +35,19 @@ export const DashboardView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'jobs'>('overview');
   const [jobToShare, setJobToShare] = useState<JobPosting | null>(null);
   
-  if (!user) {
-    // Should be handled by protected route, but safety check
-    return null;
-  }
+  // if (!user) {
+  //   // Should be handled by protected route, but safety check
+  //   return null;
+  // }
 
-  const passedCount = user.assessments.filter(a => a.passed).length;
+  const passedCount = user?.assessments?.filter(a => a.passed)?.length;
   const departments = getDepartments();
   const jobs = getJobPostings();
 
   // Filter departments to show only the user's target department or those they've already interacted with
-  const relevantDepartments = departments.filter(dept => 
-    dept === user.targetDepartment || 
-    user.assessments.some(a => a.department === dept)
+  const relevantDepartments = departments?.filter(dept => 
+    dept === user?.targetDepartment || 
+    user?.assessments?.some(a => a.department === dept)
   );
 
   const handleApply = (job: JobPosting) => {
@@ -111,8 +111,8 @@ export const DashboardView: React.FC = () => {
                    <UserIcon className="w-4 h-4 text-slate-600" />
                 </div>
                 <div className="flex flex-col text-right hidden sm:flex">
-                  <span className="text-sm font-semibold text-slate-900 leading-none">{user.name}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">{user.targetDepartment || 'Candidate'}</span>
+                  <span className="text-sm font-semibold text-slate-900 leading-none">{user?.name}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">{user?.targetDepartment || 'Candidate'}</span>
                 </div>
               </div>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
@@ -282,7 +282,7 @@ export const DashboardView: React.FC = () => {
                 </div>
               ) : (
                 jobs.map(job => {
-                  const isCertified = user.assessments.some(a => a.department === job.department && a.passed);
+                  const isCertified = user?.assessments?.some(a => a.department === job.department && a.passed);
                   return (
                     <div 
                       key={job.id} 

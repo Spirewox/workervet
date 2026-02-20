@@ -1,18 +1,19 @@
 import { useQuery } from "@tanstack/react-query"
 import { axiosGet } from "../lib/api"
+import { Department } from "../interface/settings.interface"
 
 export interface CandidateAct{
     _id : string
     "full_name": string,
     "email": string,
     "phone": string,
-    "target_department": string,
+    "target_department": string | Department,
     "cv": {
         "filename": string,
         "url": string
     },
     "recent_activity": {
-    "job_name": string
+    "department_name": string
     "result": "pass" | "fail",
     "submitted_at": Date
     }
@@ -60,8 +61,8 @@ export interface CandidateSkill {
 
 export interface CandidateSkillRes
 {
-  "candidate_id": "63f1c2b7e8f1a2d5f0a3c4d9",
-  "candidate_name": "Alice Johnson",
+  "candidate_id": string,
+  "candidate_name": string,
   "total_assessments": number,
   "pass_rate": number,
   "avg_score": number,
@@ -77,7 +78,7 @@ const fetchCandidateSkills = async (id : string) => {
 // Custom hook
 export const useCandidateSkills = (id : string) => {
   return useQuery({
-    queryKey: ["candidate - skills",id],
+    queryKey: ["candidate-skills",id],
     enabled : !!id ,
     queryFn: ()=>fetchCandidateSkills(id),
     retry : false,
@@ -87,11 +88,12 @@ export const useCandidateSkills = (id : string) => {
 
 
 export interface AssessmentHistory {
-    "date": Date,
-    "job_name": string,
-    "score": string,
-    "percentage": number,
-    "result": "pass" | "fail"
+  "date": Date,
+  "job_name": string,
+  department_name : string,
+  "score": string,
+  "percentage": number,
+  "result": "pass" | "fail"
 }
 
 
@@ -104,7 +106,7 @@ const fetchCandidateAssessmentHistory = async (id : string) => {
 // Custom hook
 export const useCandidateAssessmentHistory = (id : string) => {
   return useQuery({
-    queryKey: ["canidate - assessment - history", id],
+    queryKey: ["canidate-assessment-history",id],
     enabled : !!id ,
     queryFn: ()=>fetchCandidateAssessmentHistory(id),
     retry : false,
@@ -130,6 +132,29 @@ export const useRecentAssessments= (enabled : boolean) => {
     queryKey: ["assessments", ],
     enabled,
     queryFn: ()=>fetchRecentAssessments(),
+    retry : false,
+  });
+};
+
+export interface DepartmentPassRate {
+  
+  "department_name": string,
+  "percentage": number,
+  "total_people": number,
+  "total_passed": number
+}
+
+const fetchDepartmentsPassRate = async () => {
+  const response = await axiosGet(`assessment/department/pass-rate`, true);
+  return response as DepartmentPassRate[]
+};
+
+// Custom hook
+export const useDepartmentsPassRate= (enabled : boolean) => {
+  return useQuery({
+    queryKey: ["department-passrates", ],
+    enabled,
+    queryFn: ()=>fetchDepartmentsPassRate(),
     retry : false,
   });
 };

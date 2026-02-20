@@ -1,6 +1,5 @@
 import { getDepartments, getJobPostings, getUsers } from "../../services/dataStore";
 import {useState} from "react"
-import { SKILLS, User } from "../../types";
 import { Input } from "../ui/input";
 import { BarChart, Briefcase, Calendar, Mail, Search, Send, TrendingUp, Users, X } from "lucide-react";
 import { Card } from "../ui/card";
@@ -10,6 +9,7 @@ import { CandidateAct, useCandidateAssessmentHistory, useCandidates, useCandidat
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 import { Skeleton } from "../ui/skeleton";
+import { Department } from "../../interface/settings.interface";
 
 const UserManagementModule: React.FC = () => {
   const {user} = useAuth()
@@ -19,7 +19,7 @@ const UserManagementModule: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1)
   const limit = 20
-  const [selectedUser, setSelectedUser] = useState<CandidateAct | null>(null);
+  const [selectedUser, setSelectedUser] = useState<CandidateAct>({} as CandidateAct);
   const {data : usersData, isLoading : usersLoading, refetch : refetchUsers} = useCandidates({
     enabled : !!user && user.role == "admin",
     search : search,
@@ -29,7 +29,7 @@ const UserManagementModule: React.FC = () => {
   const { data : candidateSkills, isLoading : candidateSkillsLoading, } = useCandidateSkills(selectedUser?._id)
 
   const { data : assessmentHistory, isLoading : assessmentHistoryLoading, } = useCandidateAssessmentHistory(selectedUser?._id)
-
+  console.log(assessmentHistoryLoading)
 
   const getJobTitle = (jobId?: string) => {
     if (!jobId) return null;
@@ -114,7 +114,7 @@ const UserManagementModule: React.FC = () => {
                       {user.target_department && (
                         <div className="flex items-center justify-between">
                            <span className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Target</span>
-                           <span className="font-medium text-slate-700 text-right">{user.target_department}</span>
+                           <span className="font-medium text-slate-700 text-right">{(user.target_department as Department).department_name}</span>
                         </div>
                       )}
                       <div className="flex items-center justify-between">
@@ -133,7 +133,7 @@ const UserManagementModule: React.FC = () => {
                 <Button 
                     variant="outline" 
                     className="w-full text-indigo-600 border-indigo-100 hover:bg-indigo-50"
-                    onClick={() => setSelectedUser(user)}
+                    onClick={() => setSelectedUser(()=> user)}
                 >
                     <BarChart className="w-4 h-4 mr-2" /> View Performance
                 </Button>
@@ -146,8 +146,8 @@ const UserManagementModule: React.FC = () => {
                  <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
                     {user?.recent_activity ? ( <div className="flex items-center justify-between bg-white p-2.5 rounded border border-slate-200 shadow-sm">
                            <div className="min-w-0 flex-1 mr-2">
-                              <div className="font-medium text-xs text-slate-900 truncate" title={user?.recent_activity.job_name}>
-                                 {user?.recent_activity.job_name}
+                              <div className="font-medium text-xs text-slate-900 truncate" title={user?.recent_activity.department_name}>
+                                 {user?.recent_activity.department_name}
                               </div>
                               <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
                                  <Calendar className="w-3 h-3" /> {new Date(user?.recent_activity.submitted_at).toLocaleDateString()}
@@ -169,7 +169,7 @@ const UserManagementModule: React.FC = () => {
       </div>
 
       {/* Performance Modal */}
-      {selectedUser && (
+      {(selectedUser?._id && !assessmentHistoryLoading && !candidateSkillsLoading) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setSelectedUser(null)}>
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
@@ -179,7 +179,7 @@ const UserManagementModule: React.FC = () => {
                         </div>
                         <div>
                             <h3 className="text-lg font-bold text-slate-900">{selectedUser.full_name}</h3>
-                            <p className="text-sm text-slate-500">{selectedUser.target_department || "No Dept"}</p>
+                            <p className="text-sm text-slate-500">{(selectedUser.target_department as Department).department_name || "No Dept"}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -221,7 +221,7 @@ const UserManagementModule: React.FC = () => {
                                 <div key={stat.skill_id} className="space-y-1.5">
                                     <div className="flex justify-between text-sm">
                                         <span className="font-medium text-slate-700">{stat.skill_name}</span>
-                                        <span className="text-slate-500 font-mono">{stat.percentage}%</span>
+                                        <span className="text-slate-500 font-mono">{stat?.percentage?.toFixed(2) || 0}%</span>
                                     </div>
                                     <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
                                         <div 
@@ -264,7 +264,7 @@ const UserManagementModule: React.FC = () => {
                                             <tr key={idx} className="hover:bg-slate-50/50">
                                                 <td className="px-4 py-3 text-slate-600">{new Date(a.date).toLocaleDateString()}</td>
                                                 <td className="px-4 py-3 font-medium text-slate-900">
-                                                    {a.job_name}
+                                                    {a.department_name}
                                                     {a.job_name && <span className="ml-2 text-xs font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">Job App</span>}
                                                 </td>
                                                 <td className="px-4 py-3 text-slate-600">{a.score} ({a.percentage}%)</td>

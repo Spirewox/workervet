@@ -29,6 +29,9 @@ import {
   Briefcase,
   Loader2
 } from 'lucide-react';
+import { useDepartments } from '../hooks/useSettings';
+import { axiosPost } from '../lib/api';
+import { toast } from 'sonner';
 
 export const LoginView: React.FC = () => {
   const navigate = useNavigate();
@@ -52,8 +55,9 @@ export const LoginView: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [department, setDepartment] = useState<Department | ''>(jobContext?.department || '');
   const [cvFile, setCvFile] = useState<File | null>(null);
+  const [candidateCheck, setCandidateCheck] = useState(false)
   
-  const departments = getDepartments();
+  const {data : departments} = useDepartments();
 
   // Reset state when switching modes
   useEffect(() => {
@@ -77,118 +81,101 @@ export const LoginView: React.FC = () => {
     }
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const handleRegisterSubmit = async(e: React.FormEvent) => {
+    try {
+      e.preventDefault();
+      setError(null);
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match.");
+        return;
+      }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
+      if (password.length < 6) {
+        setError("Password must be at least 6 characters.");
+        return;
+      }
 
-    setLoading(true);
-    // Simulate API delay
-    setTimeout(() => {
-      const newUser: User = {
-        name,
-        email,
-        phone,
-        password,
-        cvFileName: cvFile?.name,
-        targetDepartment: department as Department,
-        assessments: []
-      };
-      
-      addUser(newUser);
+      setLoading(true);
+
+      const formData = new FormData()
+      formData.append('file',cvFile)
+      const {secure_url, file_name} = await axiosPost('uploads/cv',formData,true)
+
+      const user = await axiosPost(`users/candidate`,{full_name : name, email, password,target_department : department, cv : {filename : file_name || `${name}'s cv`, url : secure_url} },true)
+
+      handleAuthSuccess(user);
+
+      toast.success("Candidate account created successfully")
+
+    } catch (error) {
+      console.log(error)
+      toast.error(error.message)
+    }finally{
       setLoading(false);
-      handleAuthSuccess(newUser);
-    }, 800);
+    }
+    
   };
 
-  const handleSignInFlow = (e: React.FormEvent) => {
+  const handleSignInFlow = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (loginStep === 'email') {
       // Step 1: Check if user exists
-      const user = getUserByEmail(email);
-      if (!user) {
+      setLoading(true)
+      const {signedUp} = await axiosPost(`auth/candidate/check`,{ email},true);
+      setLoading(false)
+      if (!signedUp) {
         setError("No account found with this email. Please register.");
         return;
       }
+      setLoginStep('password');
       
-      if (user.password) {
-        setLoginStep('password');
-      } else {
-        // User exists but has no password (Legacy user from before feature)
-        setLoginStep('create-password');
-      }
+      // if (user.password) {
+      //   setLoginStep('password');
+      // } else {
+      //   // User exists but has no password (Legacy user from before feature)
+      //   setLoginStep('create-password');
+      // }
     } else if (loginStep === 'password') {
-      // Step 2a: Verify password
-      const user = getUserByEmail(email);
-      if (user && user.password === password) {
-         setLoading(true);
-         setTimeout(() => {
-           setLoading(false);
-           handleAuthSuccess(user);
-         }, 600);
+      setLoading(true);
+      const {user} = await axiosPost(`auth/candidate/login`,{email, password},true)
+      if (user) {
+        handleAuthSuccess(user);
       } else {
         setError("Incorrect password.");
       }
-    } else if (loginStep === 'create-password') {
-      // Step 2b: Create password for legacy user
-      if (password !== confirmPassword) {
-        setError("Passwords do not match.");
-        return;
-      }
-      if (password.length < 6) {
-        setError("Password must be at least 6 characters.");
-        return;
-      }
-      
-      updateUserPassword(email, password);
-      const user = getUserByEmail(email);
-      if (user) {
-        setLoading(true);
-        setTimeout(() => {
-           setLoading(false);
-           alert("Password set successfully! Logging you in...");
-           handleAuthSuccess(user);
-        }, 800);
-      }
-    }
+
+      setLoading(false);
+    } 
   };
 
-  const handleQuickLogin = () => {
-    setLoading(true);
-    setTimeout(() => {
-       // Check if Alex exists
-       let user = getUserByEmail('alex.j@example.com');
-       if (!user) {
-          // Create if not exists (fallback)
-          user = {
-            name: "Alex Johnson",
-            email: "alex.j@example.com",
-            phone: "555-0101",
-            targetDepartment: "Sales & Customer Management",
-            password: "password123",
-            assessments: []
-          };
-          addUser(user);
-       } else if (!user.password) {
-         // Ensure alex has password for subsequent logins
-         updateUserPassword(user.email, "password123");
-         user.password = "password123";
-       }
-       setLoading(false);
-       handleAuthSuccess(user);
-    }, 600);
-  };
+  // const handleQuickLogin = () => {
+  //   setLoading(true);
+  //   setTimeout(() => {
+  //      // Check if Alex exists
+  //      let user = getUserByEmail('alex.j@example.com');
+  //      if (!user) {
+  //         // Create if not exists (fallback)
+  //         user = {
+  //           name: "Alex Johnson",
+  //           email: "alex.j@example.com",
+  //           phone: "555-0101",
+  //           targetDepartment: "Sales & Customer Management",
+  //           password: "password123",
+  //           assessments: []
+  //         };
+  //         addUser(user);
+  //      } else if (!user.password) {
+  //        // Ensure alex has password for subsequent logins
+  //        updateUserPassword(user.email, "password123");
+  //        user.password = "password123";
+  //      }
+  //      setLoading(false);
+  //      handleAuthSuccess(user);
+  //   }, 600);
+  // };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -300,13 +287,13 @@ export const LoginView: React.FC = () => {
 
                {error && <p className="text-sm text-red-600 font-medium">{error}</p>}
 
-               <Button type="submit" className="w-full mt-2" size="lg" disabled={loading}>
+               <Button type="submit" className="w-full mt-2 cursor-pointer" size="lg" disabled={loading}>
                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                  {loginStep === 'email' ? 'Continue' : (loginStep === 'create-password' ? 'Save & Sign In' : 'Sign In')}
                </Button>
 
                {/* Quick Login for Test */}
-               <div className="relative py-2">
+               {/* <div className="relative py-2">
                   <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-100"></span></div>
                   <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-slate-400">Testing</span></div>
                </div>
@@ -320,7 +307,7 @@ export const LoginView: React.FC = () => {
                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                  {!loading && <Zap className="w-4 h-4 mr-2" />}
                  Quick Login (Test)
-               </Button>
+               </Button> */}
              </form>
           ) : (
             // REGISTER FORM
@@ -396,7 +383,7 @@ export const LoginView: React.FC = () => {
                         <SelectValue placeholder="Select Department..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                        {departments?.map(d => <SelectItem key={d._id} value={d._id}>{d.department_name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>

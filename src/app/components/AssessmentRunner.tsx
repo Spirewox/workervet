@@ -5,41 +5,59 @@ import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { cn } from './ui/utils';
 import { ArrowRight, Clock, AlertTriangle } from 'lucide-react';
+import { useSkills } from '../hooks/useSettings';
 
 interface AssessmentRunnerProps {
   questions: Question[];
-  department: Department;
+  department : string;
   onComplete: (answers: { questionId: string; selectedOptionIndex: number; isCorrect: boolean }[]) => void;
   onCancel: () => void;
 }
 
 const DEFAULT_TIME_PER_QUESTION = 20;
 
-export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions, department, onComplete, onCancel }) => {
+export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions,department, onComplete, onCancel }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
-  
-  const currentQuestion = questions[currentIndex];
+  const [answers, setAnswers] = useState<{question : string, selected_option : string}[]>([]);
+  const {data : skillData} = useSkills()
+  const currentQuestion = questions?.[currentIndex];
   // Use specific time limit or default
   const timeLimit = currentQuestion?.timeLimit || DEFAULT_TIME_PER_QUESTION;
-  
   const [timeLeft, setTimeLeft] = useState(timeLimit);
 
-  const totalQuestions = questions.length;
+  const totalQuestions = questions?.length;
   const progress = ((currentIndex + 1) / totalQuestions) * 100;
 
-  const handleOptionSelect = (index: number) => {
-    if (!currentQuestion) return;
-    setAnswers(prev => ({ ...prev, [currentQuestion.id]: index }));
+  const handleOptionSelect = ({
+    question,
+    selected_option,
+  }: {
+    question: string;
+    selected_option: string;
+  }) => {
+    setAnswers(prev => {
+      const existingIndex = prev.findIndex(
+        ans => ans.question === question
+      );
+
+      if (existingIndex !== -1) {
+        // ✅ Update existing answer
+        const updated = [...prev];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          selected_option,
+        };
+        return updated;
+      }
+
+      // ✅ Add new answer
+      return [...prev, { question, selected_option }];
+    });
   };
 
+
   const finishAssessment = () => {
-    const results = questions.map(q => ({
-      questionId: q.id,
-      selectedOptionIndex: answers[q.id] ?? -1,
-      isCorrect: answers[q.id] === q.correctOptionIndex
-    }));
-    onComplete(results);
+    onComplete(answers);
   };
 
   const handleNext = () => {
@@ -50,14 +68,12 @@ export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions, d
     }
   };
 
-  // Reset timer when question changes
   useEffect(() => {
     if (currentQuestion) {
       setTimeLeft(currentQuestion.timeLimit || DEFAULT_TIME_PER_QUESTION);
     }
   }, [currentIndex, currentQuestion]);
 
-  // Countdown timer
   useEffect(() => {
     if (timeLeft === 0) {
       handleNext();
@@ -76,7 +92,14 @@ export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions, d
   }
 
   const isAlarm = timeLeft <= 5;
-  const isCurrentAnswered = answers[currentQuestion.id] !== undefined;
+  const currentAnswer = answers?.find(
+    ans => ans.question === currentQuestion?.question_id
+  );
+
+  const currentSkill = skillData?.find(
+    ans => ans._id === currentQuestion?.skill
+  );
+  const isCurrentAnswered = !!currentAnswer?.selected_option;
 
   return (
     <div className="max-w-3xl mx-auto py-12 px-4">
@@ -88,7 +111,7 @@ export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions, d
              <Badge variant="secondary" className="text-xs">
                 Question {currentIndex + 1} of {totalQuestions}
              </Badge>
-             <span className="text-sm text-slate-500">Evaluating: <span className="font-medium text-slate-900">{currentQuestion.skill}</span></span>
+             <span className="text-sm text-slate-500">Evaluating: <span className="font-medium text-slate-900">{currentSkill?.skill_name}</span></span>
           </div>
         </div>
         
@@ -97,8 +120,8 @@ export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions, d
             <div className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-full border font-mono font-bold transition-all duration-300",
                 isAlarm 
-                    ? "bg-red-50 border-red-200 text-red-600 animate-pulse ring-2 ring-red-100" 
-                    : "bg-white border-slate-200 text-slate-700"
+                  ? "bg-red-50 border-red-200 text-red-600 animate-pulse ring-2 ring-red-100" 
+                  : "bg-white border-slate-200 text-slate-700"
             )}>
                 {isAlarm ? <AlertTriangle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
                 <span>00:{timeLeft.toString().padStart(2, '0')}</span>
@@ -130,11 +153,11 @@ export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions, d
 
           <div className="space-y-3">
             {currentQuestion.options.map((option, idx) => {
-              const isSelected = answers[currentQuestion.id] === idx;
+               const isSelected = currentAnswer?.selected_option === option._id;
               return (
                 <div 
                   key={idx}
-                  onClick={() => handleOptionSelect(idx)}
+                  onClick={() => handleOptionSelect({question : currentQuestion.question_id, selected_option : option._id})}
                   className={cn(
                     "p-4 rounded-lg border cursor-pointer transition-all duration-200 flex items-center group",
                     isSelected 
@@ -149,7 +172,7 @@ export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions, d
                      {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-white"></div>}
                   </div>
                   <span className={cn("text-sm font-medium", isSelected ? "text-white" : "text-slate-700")}>
-                    {option}
+                    {option?.content}
                   </span>
                 </div>
               );

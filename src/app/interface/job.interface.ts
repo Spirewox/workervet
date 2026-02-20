@@ -12,7 +12,10 @@ export interface IJob {
   location?: string;
   salary_range?: string;
 
-  is_active: boolean;
+  is_active?: boolean;
+
+  is_certified ?: boolean,
+  is_applied ?: boolean,
 
   createdAt?: Date;
   updatedAt?: Date;

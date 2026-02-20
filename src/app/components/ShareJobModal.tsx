@@ -9,13 +9,14 @@ import {
   Mail,
   Copy
 } from 'lucide-react';
+import { IJob } from '../interface/job.interface';
 
-export const ShareJobModal: React.FC<{ job: JobPosting; onClose: () => void }> = ({ job, onClose }) => {
-  const url = `${window.location.origin}${window.location.pathname}?jobId=${job.id}`;
+export const ShareJobModal: React.FC<{ job: IJob; onClose: () => void }> = ({ job, onClose }) => {
+  const url = `${window.location.origin}${window.location.pathname}?jobId=${job._id}`;
   const encodedUrl = encodeURIComponent(url);
-  const text = `Check out this ${job.title} role at Workervet!`;
+  const text = `Check out this ${job.job_title} role at Workervet!`;
   const encodedText = encodeURIComponent(text);
-  const encodedSubject = encodeURIComponent(`Job Opportunity: ${job.title}`);
+  const encodedSubject = encodeURIComponent(`Job Opportunity: ${job.job_title}`);
   const encodedBody = encodeURIComponent(`${text}\n\n${url}`);
 
   const copyToClipboard = () => {
@@ -34,7 +35,7 @@ export const ShareJobModal: React.FC<{ job: JobPosting; onClose: () => void }> =
         </div>
         <div className="p-6 space-y-5">
            <p className="text-sm text-slate-500 text-center">
-             Share <span className="font-semibold text-slate-900">{job.title}</span> with your network.
+             Share <span className="font-semibold text-slate-900">{job.job_title}</span> with your network.
            </p>
            
            <div className="grid grid-cols-2 gap-3">

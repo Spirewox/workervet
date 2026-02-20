@@ -12,21 +12,20 @@ import {
   DollarSign, 
   Share2 
 } from 'lucide-react';
+import { useJobs } from '../hooks/useJobs';
+import { Department } from '../interface/settings.interface';
 
 export const JobBoardView: React.FC = () => {
   const navigate = useNavigate();
-  const jobs = getJobPostings();
+  const [page , setPage] = useState(1)
+  const limit = 20
   const [searchTerm, setSearchTerm] = useState('');
   const [jobToShare, setJobToShare] = useState<JobPosting | null>(null);
   
-  const filteredJobs = jobs.filter(job => 
-    job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleSelectJob = (job: JobPosting) => {
-    navigate(`/jobs/${job.id}`);
+  const {data : jobs, isLoading : jobsLoading} = useJobs(true,{page, limit,search : searchTerm})
+  console.log(jobs)
+  const handleSelectJob = (id: string) => {
+    navigate(`/jobs/${id}`);
   };
 
   const handleLogin = () => {
@@ -88,7 +87,7 @@ export const JobBoardView: React.FC = () => {
       {/* Job Grid */}
       <main className="max-w-7xl mx-auto px-6 pb-24">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredJobs.length === 0 ? (
+          {jobs?.data?.length === 0 ? (
             <div className="col-span-full py-24 text-center">
                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
                   <Search className="w-5 h-5" />
@@ -102,28 +101,28 @@ export const JobBoardView: React.FC = () => {
                </button>
             </div>
           ) : (
-            filteredJobs.map((job) => (
+            jobs?.data?.map((job) => (
               <div 
-                key={job.id} 
+                key={job?._id} 
                 className="group bg-white rounded-2xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 cursor-pointer flex flex-col items-start relative overflow-hidden"
-                onClick={() => handleSelectJob(job)}
+                onClick={() => handleSelectJob(job._id)}
               >
                 <div className="flex justify-between items-start w-full mb-4">
                   <div className="flex items-center gap-3">
                      <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-900 font-bold text-sm border border-slate-100">
-                       {job.department.substring(0,2).toUpperCase()}
+                       {(job.department as Department).department_name.substring(0,2).toUpperCase()}
                      </div>
                      <div>
                        <h3 className="font-semibold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
-                         {job.title}
+                         {job.job_title}
                        </h3>
-                       <p className="text-xs text-slate-500 mt-0.5">{job.department}</p>
+                       <p className="text-xs text-slate-500 mt-0.5">{(job.department as Department).department_name}</p>
                      </div>
                   </div>
                 </div>
 
                 <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed mb-6 flex-1">
-                  {job.description}
+                  {job.job_description}
                 </p>
 
                 <div className="w-full flex items-center justify-between pt-4 border-t border-slate-50 mt-auto">
@@ -131,9 +130,9 @@ export const JobBoardView: React.FC = () => {
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" /> {job.location}
                       </span>
-                      {job.salaryRange && (
+                      {job.salary_range && (
                         <span className="flex items-center gap-1">
-                          <DollarSign className="w-3 h-3" /> {job.salaryRange}
+                          {job.salary_range}
                         </span>
                       )}
                    </div>
@@ -152,7 +151,7 @@ export const JobBoardView: React.FC = () => {
 
       {/* Minimal Footer */}
       <footer className="border-t border-slate-100 py-12 text-center">
-         <p className="text-slate-400 text-sm">© 2025 Workervet. All rights reserved.</p>
+         <p className="text-slate-400 text-sm">© {new Date().getFullYear()} Workervet. All rights reserved.</p>
       </footer>
 
       {jobToShare && (

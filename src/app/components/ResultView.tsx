@@ -27,11 +27,13 @@ export const ResultView: React.FC = () => {
     );
   }
 
-  const percentage = Math.round((result.score / result.totalQuestions) * 100);
+  const percentage = result.percentage;
   const isJobLink = !!result.jobId;
 
+  const passed = result?.result == "pass"
+
   const handleBack = () => {
-    if (result.jobId && result.passed) {
+    if (result.jobId && result.result == "pass") {
         navigate(`/jobs/${result.jobId}`);
     } else {
         navigate('/dashboard');
@@ -45,10 +47,10 @@ export const ResultView: React.FC = () => {
           {/* Header Status */}
           <div className={cn(
             "p-8 text-center space-y-4",
-            result.passed ? "bg-emerald-50/50" : "bg-red-50/50"
+            passed ? "bg-emerald-50/50" : "bg-red-50/50"
           )}>
             <div className="flex justify-center">
-              {result.passed ? (
+              {passed ? (
                 <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
                   <CheckCircle className="w-10 h-10 text-emerald-600" />
                 </div>
@@ -61,12 +63,12 @@ export const ResultView: React.FC = () => {
 
             <div>
               <h2 className="text-2xl font-bold text-slate-900 mb-1">
-                {result.passed ? 'Certification Earned!' : 'Assessment Failed'}
+                {passed? 'Certification Earned!' : 'Assessment Failed'}
               </h2>
               <p className="text-slate-500 text-sm">
-                {result.passed 
-                  ? `You have demonstrated proficiency in ${result.department} workplace scenarios.`
-                  : `You did not meet the passing criteria for ${result.department}.`
+                {passed 
+                  ? `You have demonstrated proficiency in ${result.department_name} workplace scenarios.`
+                  : `You did not meet the passing criteria for ${result.department_name}.`
                 }
               </p>
             </div>
@@ -74,7 +76,7 @@ export const ResultView: React.FC = () => {
 
           <div className="p-8 space-y-6">
             {/* Hiring Pipeline Notification */}
-            {result.passed && (
+            {passed && (
               <div className="bg-emerald-600 rounded-xl p-5 text-white shadow-lg shadow-emerald-200/50 flex items-start gap-4 animate-in slide-in-from-top-2 duration-500">
                 <div className="bg-white/20 p-2 rounded-lg shrink-0">
                   <Inbox className="w-5 h-5 text-white" />
@@ -96,14 +98,14 @@ export const ResultView: React.FC = () => {
                 </div>
                 <div className="text-center border-l border-slate-200">
                   <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Correct Answers</p>
-                  <p className="text-3xl font-black text-slate-900 mt-1">{result.score}/{result.totalQuestions}</p>
+                  <p className="text-3xl font-black text-slate-900 mt-1">{result.total_score}/{result.max_score}</p>
                 </div>
               </div>
             </div>
 
             <div className="pt-2">
               <Button size="lg" className="w-full h-12 text-base" onClick={handleBack}>
-                {isJobLink && result.passed 
+                {isJobLink && passed 
                   ? "Continue to Job" 
                   : "Return to Dashboard"}
                 <ArrowRight className="w-4 h-4 ml-2" />

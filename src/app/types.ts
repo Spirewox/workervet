@@ -23,11 +23,10 @@ export const SKILLS: Skill[] = [
 
 export interface Question {
   id: string;
-  skill: Skill;
+  skill_id: string;
   scenario: string;
   questionText: string;
-  options: string[];
-  correctOptionIndex: number;
+  options: {_id : string, content : string}[];
   explanation: string;
   timeLimit?: number; // Added to allow setting countdown timer per question (in seconds)
   isPreset?: boolean; // Flag to identify manually added questions
@@ -47,19 +46,14 @@ export interface JobPosting {
 }
 
 export interface AssessmentResult {
-  id: string;
-  department: Department;
+  assessment_id: string;
+  department_name: string;
   jobId?: string; // Optional: link result to a specific job posting
-  date: string;
-  score: number;
-  totalQuestions: number;
-  passed: boolean;
-  answers: {
-    questionId: string;
-    selectedOptionIndex: number;
-    isCorrect: boolean;
-    skill?: string; // Added to track performance per skill
-  }[];
+  submitted_at: Date;
+  total_score: number;
+  max_score : number;
+  percentage: number;
+  result : "pass" | "fail"
 }
 
 export interface User {
