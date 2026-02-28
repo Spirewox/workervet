@@ -430,11 +430,11 @@ export const LoginView: React.FC = () => {
           )}
 
         </CardContent>
-        <CardFooter className="flex justify-center border-t border-slate-100 pt-6">
+        {/* <CardFooter className="flex justify-center border-t border-slate-100 pt-6">
           <p className="text-xs text-slate-400">
             Administrator? <button className="text-indigo-600 hover:underline" onClick={() => navigate('/admin/login')}>Login here</button>
           </p>
-        </CardFooter>
+        </CardFooter> */}
       </Card>
       
       <div className="absolute bottom-4 text-center w-full">
