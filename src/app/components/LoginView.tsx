@@ -101,6 +101,9 @@ export const LoginView: React.FC = () => {
 
       setLoading(true);
 
+      if(!cvFile){
+          toast.error("Please upload your CV to proceed.");
+      }
       const formData = new FormData()
       formData.append('file',cvFile)
       const {secure_url, file_name} = await axiosPost('uploads/cv',formData,true)
@@ -393,7 +396,7 @@ export const LoginView: React.FC = () => {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="cv">Upload CV (Optional)</Label>
+                  <Label htmlFor="cv">Upload CV</Label>
                   <Input 
                      id="cv" 
                      type="file" 
