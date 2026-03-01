@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Department, JobPosting } from '../types';
+import { User,} from '../types';
 import { addUser, getUserByEmail, updateUserPassword, getDepartments } from '../services/dataStore';
 import { useAuth } from '../context/AuthContext';
 import { PasswordInput } from './PasswordInput';
@@ -32,6 +32,8 @@ import {
 import { useDepartments } from '../hooks/useSettings';
 import { axiosPost } from '../lib/api';
 import { toast } from 'sonner';
+import { IJob } from '../interface/job.interface';
+import { Department } from '../interface/settings.interface';
 
 export const LoginView: React.FC = () => {
   const navigate = useNavigate();
@@ -40,20 +42,21 @@ export const LoginView: React.FC = () => {
   
   // Job context passed via navigation state or query params could be handled here
   // For now we assume activeJob might be passed in state if navigating from Job Board
-  const jobContext = location.state?.job as JobPosting | undefined;
+  const jobContext = location.state?.job as IJob | undefined;
 
   const [mode, setMode] = useState<'signin' | 'register'>('register');
   const [loginStep, setLoginStep] = useState<'email' | 'password' | 'create-password'>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  console.log(jobContext)
   // Form State
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [department, setDepartment] = useState<Department | ''>(jobContext?.department || '');
+  const [department, setDepartment] = useState<String | ''>((jobContext?.department as Department)._id || '');
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [candidateCheck, setCandidateCheck] = useState(false)
   
@@ -75,7 +78,7 @@ export const LoginView: React.FC = () => {
     login(user);
     if (jobContext) {
       // Navigate back to the job they were trying to apply for
-      navigate(`/jobs/${jobContext.id}`);
+      navigate(`/jobs/${jobContext._id}`);
     } else {
       navigate('/dashboard');
     }
@@ -185,8 +188,8 @@ export const LoginView: React.FC = () => {
 
   const renderTitle = () => {
     if (jobContext) {
-      if (mode === 'signin') return `Sign in to apply for ${jobContext.title}`;
-      return `Apply for ${jobContext.title}`;
+      if (mode === 'signin') return `Sign in to apply for ${jobContext.job_title}`;
+      return `Apply for ${jobContext.job_title}`;
     }
     if (mode === 'signin') return "Welcome back!";
     return "Create an account";

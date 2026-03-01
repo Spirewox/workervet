@@ -23,7 +23,6 @@ export const JobBoardView: React.FC = () => {
   const [jobToShare, setJobToShare] = useState<JobPosting | null>(null);
   
   const {data : jobs, isLoading : jobsLoading} = useJobs(true,{page, limit,search : searchTerm})
-  console.log(jobs)
   const handleSelectJob = (id: string) => {
     navigate(`/jobs/${id}`);
   };
