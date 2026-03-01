@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (user :  IUser) => {
     setLocalUser(user)
     await refetch()
-    navigate(prevState ?? user.role == "admin" ? "/admin" : "/dashboard", { replace: true });
+    // navigate(prevState ?? user.role == "admin" ? "/admin" : "/dashboard", { replace: true });
   };
 
   const logout = async () => {

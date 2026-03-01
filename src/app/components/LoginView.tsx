@@ -48,8 +48,6 @@ export const LoginView: React.FC = () => {
   const [loginStep, setLoginStep] = useState<'email' | 'password' | 'create-password'>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  console.log(jobContext)
   // Form State
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
