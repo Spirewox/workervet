@@ -63,7 +63,7 @@ export const JobLandingView: React.FC = () => {
     if (isUserCertified) {
         alert("Application Submitted!");
     } else {
-        await axiosPost(`assessment/candidate/departments/${(job.department as Department)._id}/`)
+        await axiosPost(`assessment/candidate/departments/${(job.department as Department)._id}/`,{},true)
         navigate(`/assessment/${encodeURIComponent((job.department as Department)._id )}`);
     }
   };
