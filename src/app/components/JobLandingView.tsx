@@ -18,6 +18,7 @@ import {
 import { useJobs } from '../hooks/useJobs';
 import { Department } from '../interface/settings.interface';
 import { IJob } from '../interface/job.interface';
+import { axiosPost } from '../lib/api';
 
 export const JobLandingView: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -52,7 +53,7 @@ export const JobLandingView: React.FC = () => {
       ? (isUserCertified ? "Apply Now" : "Take Assessment") 
       : "Apply Now"; 
 
-  const handleAction = () => {
+  const handleAction = async() => {
     if (!user) {
         // Redirect to login with job context
         navigate('/login', { state: { job } });
@@ -62,6 +63,7 @@ export const JobLandingView: React.FC = () => {
     if (isUserCertified) {
         alert("Application Submitted!");
     } else {
+        await axiosPost(`assessment/candidate/departments/${(job.department as Department)._id}/`)
         navigate(`/assessment/${encodeURIComponent((job.department as Department)._id )}`);
     }
   };
