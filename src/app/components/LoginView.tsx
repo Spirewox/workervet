@@ -54,7 +54,7 @@ export const LoginView: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [department, setDepartment] = useState<String | ''>((jobContext?.department as Department)._id || '');
+  const [department, setDepartment] = useState<String | ''>((jobContext?.department as Department)?._id || '');
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [candidateCheck, setCandidateCheck] = useState(false)
   
