@@ -7,15 +7,15 @@ import { Department } from "../../interface/settings.interface";
 import { Button } from "../ui/button";
 import { toast } from "react-toastify";
 import { axiosPost } from "../../lib/api";
-import { join } from "node:path";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../ui/pagination";
 
 export const JobBoardPage = () => {
     const [page , setPage] = useState(1)
     const limit = 20
     const [jobToShare, setJobToShare] = useState<IJob | null>(null);
+    const [applyingJobId, setApplyingJobId] = useState<string | null>(null);
     
-    const {data : jobs, isLoading : jobsLoading} = useJobs(true,{page, limit})
+    const {data : jobs, isLoading : jobsLoading, refetch: refetchJobs} = useJobs(true,{page, limit})
 
     const totalPages = jobs?.meta?.totalPages || 1;
 
@@ -28,8 +28,24 @@ export const JobBoardPage = () => {
         return pages;
     };
     const navigate = useNavigate();
-    const handleApply = (job: IJob) => {
-        alert(`Application submitted for ${job.job_title}!`);
+    const handleApply = async (job: IJob) => {
+        if (!job._id) return;
+
+        try {
+            setApplyingJobId(job._id);
+            await axiosPost('jobs/application', { job: job._id }, true);
+            toast.success(`Application submitted for ${job.job_title}`);
+            refetchJobs();
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+                return;
+            }
+
+            toast.error('Failed to submit application');
+        } finally {
+            setApplyingJobId(null);
+        }
     };
 
     const handleSelectDepartment = async (dept: string) => {
@@ -99,10 +115,11 @@ export const JobBoardPage = () => {
                             </Button>
                         ) : isCertified ? (
                             <Button 
+                            disabled={applyingJobId === job._id}
                             onClick={(e) => { e.stopPropagation(); handleApply(job); }} 
                             className="flex-1 bg-slate-900 hover:bg-slate-800"
                             >
-                            Apply Now
+                            {applyingJobId === job._id ? 'Applying...' : 'Apply Now'}
                             </Button>
                         ) : (
                             <Button 
