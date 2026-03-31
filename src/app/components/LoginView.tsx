@@ -76,7 +76,7 @@ export const LoginView: React.FC = () => {
     login(user);
     if (jobContext) {
       // Navigate back to the job they were trying to apply for
-      navigate(`/jobs/${jobContext._id}`);
+      navigate(`/jobs/${jobContext?._id}`);
     } else {
       navigate('/dashboard');
     }
@@ -387,7 +387,7 @@ export const LoginView: React.FC = () => {
                         <SelectValue placeholder="Select Department..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {departments?.map(d => <SelectItem key={d._id} value={d._id}>{d.department_name}</SelectItem>)}
+                        {departments?.map(d => <SelectItem key={d?._id} value={d?._id}>{d?.department_name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
