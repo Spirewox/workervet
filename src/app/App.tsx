@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { JobLandingView } from './components/JobLandingView';
 import { JobBoardView } from './components/JobBoardView';
 import { LoginView } from './components/LoginView';
+import { RegisterView } from './components/RegisterView';
 import { ResultView } from './components/ResultView';
 import { DashboardView } from './components/DashboardView';
 import { AssessmentView } from './components/AssessmentView';
@@ -54,6 +55,7 @@ function AppContent() {
       
       {/* Public Routes */}
       <Route path="/login" element={<LoginView />} />
+      <Route path="/register" element={<RegisterView />} />
       <Route path="/jobs" element={<JobBoardView />} />
       <Route path="/jobs/:jobId" element={<JobLandingView />} />
 
