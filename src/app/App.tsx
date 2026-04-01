@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { JobLandingView } from './components/JobLandingView';
 import { JobBoardView } from './components/JobBoardView';
