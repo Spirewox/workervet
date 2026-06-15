@@ -1,14 +1,31 @@
-import { Briefcase, MapPin, ArrowRight, FileText } from "lucide-react";
-import { useState } from "react";
+import {
+  Briefcase,
+  MapPin,
+  ArrowRight,
+  FileText,
+  CheckCircle,
+  XCircle,
+  Clock,
+  BarChart3,
+  ChevronDown,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
 import { Department } from "../../interface/settings.interface";
 import { useAuth } from "../../context/AuthContext";
 import {
   ApplicationStatus,
+  IApplication,
   useMyApplications,
 } from "../../hooks/useApplications";
+import {
+  CandidateAssessmentListRes,
+  useCandidateAssessmentList,
+} from "../../hooks/useDashboard";
+import { useCandidateSkills } from "../../hooks/useCandidates";
 import {
   Pagination,
   PaginationContent,
@@ -29,7 +46,7 @@ const STATUS_META: Record<
   rejected: { label: "Not Selected", variant: "destructive" },
 };
 
-const formatDate = (value?: Date) => {
+const formatDate = (value?: Date | string | null) => {
   if (!value) return "";
   const date = new Date(value);
   if (isNaN(date.getTime())) return "";
@@ -40,6 +57,139 @@ const formatDate = (value?: Date) => {
   });
 };
 
+const departmentId = (dept?: string | Department) =>
+  typeof dept === "string" ? dept : dept?._id;
+
+// Tailwind-friendly colour for a percentage score.
+const scoreTone = (percentage: number) => {
+  if (percentage >= 70) return { text: "text-emerald-600", bar: "[&_[data-slot=progress-indicator]]:bg-emerald-500" };
+  if (percentage >= 40) return { text: "text-amber-600", bar: "[&_[data-slot=progress-indicator]]:bg-amber-500" };
+  return { text: "text-red-600", bar: "[&_[data-slot=progress-indicator]]:bg-red-500" };
+};
+
+const ResultBreakdown = ({ assessment }: { assessment?: CandidateAssessmentListRes }) => {
+  const navigate = useNavigate();
+
+  if (!assessment || (!assessment.submitted_at && assessment.status !== "in_progress")) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 text-center">
+        <p className="text-xs text-slate-500 mb-2">No assessment results yet for this role.</p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            assessment?.department?._id &&
+            navigate(`/assessment/${encodeURIComponent(assessment.department._id)}`)
+          }
+          disabled={!assessment?.department?._id}
+        >
+          Take Assessment
+        </Button>
+      </div>
+    );
+  }
+
+  const passed = assessment.result === "pass";
+  const inProgress = assessment.status === "in_progress" && !assessment.submitted_at;
+  const tone = scoreTone(assessment.percentage ?? 0);
+
+  return (
+    <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          Assessment Result
+        </span>
+        {inProgress ? (
+          <Badge variant="outline" className="gap-1">
+            <Clock className="w-3 h-3" /> In Progress
+          </Badge>
+        ) : passed ? (
+          <Badge variant="success" className="gap-1">
+            <CheckCircle className="w-3 h-3" /> Passed
+          </Badge>
+        ) : (
+          <Badge variant="destructive" className="gap-1">
+            <XCircle className="w-3 h-3" /> Not Passed
+          </Badge>
+        )}
+      </div>
+
+      {!inProgress && (
+        <>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Score</p>
+              <p className="text-sm font-semibold text-slate-700">{assessment.score || "—"}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Accuracy</p>
+              <p className={`text-2xl font-black ${tone.text}`}>{assessment.percentage ?? 0}%</p>
+            </div>
+          </div>
+          <Progress value={assessment.percentage ?? 0} className={tone.bar} />
+        </>
+      )}
+
+      {assessment.submitted_at && (
+        <p className="text-[11px] text-slate-400">Submitted {formatDate(assessment.submitted_at)}</p>
+      )}
+    </div>
+  );
+};
+
+const SkillProfilePanel = () => {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const { data: skills, isLoading } = useCandidateSkills(user?._id ?? "");
+
+  if (isLoading || !skills || !skills.skills?.length) return null;
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 p-6">
+      <button
+        className="w-full flex items-center justify-between text-left"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+            <BarChart3 className="w-5 h-5 text-indigo-600" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Your Skill Profile</h2>
+            <p className="text-xs text-slate-500">
+              Across {skills.total_assessments} assessment{skills.total_assessments === 1 ? "" : "s"} ·{" "}
+              {Math.round(skills.avg_score)}% avg · {Math.round(skills.pass_rate)}% pass rate
+            </p>
+          </div>
+        </div>
+        <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {skills.skills.map((skill) => {
+            const pct = skill.percentage ?? 0;
+            const tone = scoreTone(pct);
+            return (
+              <div key={skill.skill_id} className="space-y-1.5">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-slate-700">{skill.skill_name}</span>
+                  {skill.percentage != null ? (
+                    <span className={`font-semibold ${tone.text}`}>{pct}%</span>
+                  ) : (
+                    <span className="text-xs text-slate-400">{skill.message || "No data"}</span>
+                  )}
+                </div>
+                {skill.percentage != null && <Progress value={pct} className={tone.bar} />}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const MyApplicationsPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -47,21 +197,39 @@ export const MyApplicationsPage = () => {
   const limit = 12;
 
   const { data, isLoading, isError } = useMyApplications(!!user?._id, { page, limit });
+  const { data: assessments } = useCandidateAssessmentList(!!user?._id);
 
   const applications = data?.data ?? [];
   const totalPages = data?.meta?.totalPages || 1;
+
+  // Map a job's department -> the candidate's assessment for that department,
+  // so each application can show its own result breakdown.
+  const assessmentByDept = useMemo(() => {
+    const map = new Map<string, CandidateAssessmentListRes>();
+    (assessments ?? []).forEach((a) => {
+      if (a.department?._id) map.set(a.department._id, a);
+    });
+    return map;
+  }, [assessments]);
+
+  const resolveAssessment = (application: IApplication) =>
+    assessmentByDept.get(departmentId(application.job?.department) ?? "");
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">My Applications</h1>
-        <p className="text-slate-500">Track the status of every job you've applied to.</p>
+        <p className="text-slate-500">
+          Track each application and see how you performed on its assessment.
+        </p>
       </div>
+
+      <SkillProfilePanel />
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-44 rounded-2xl border border-slate-100 bg-white animate-pulse" />
+            <div key={i} className="h-72 rounded-2xl border border-slate-100 bg-white animate-pulse" />
           ))}
         </div>
       ) : isError ? (
@@ -84,6 +252,7 @@ export const MyApplicationsPage = () => {
               const job = application.job;
               const department = job?.department as Department | undefined;
               const status = STATUS_META[application.status] ?? STATUS_META.pending;
+              const assessment = resolveAssessment(application);
 
               return (
                 <div
@@ -111,7 +280,7 @@ export const MyApplicationsPage = () => {
                     </Badge>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs font-medium text-slate-400 mb-6">
+                  <div className="flex items-center gap-3 text-xs font-medium text-slate-400 mb-4">
                     {job?.location && (
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" /> {job.location}
@@ -122,7 +291,9 @@ export const MyApplicationsPage = () => {
                     )}
                   </div>
 
-                  <div className="mt-auto">
+                  <ResultBreakdown assessment={assessment} />
+
+                  <div className="mt-4">
                     <Button
                       variant="outline"
                       className="w-full"
