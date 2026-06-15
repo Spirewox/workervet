@@ -2,7 +2,7 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "../ui/button";
-import { LayoutDashboard, Briefcase, LogOut, ShieldCheck, UserIcon, FileText } from "lucide-react";
+import { LayoutDashboard, Briefcase, LogOut, ShieldCheck, UserIcon, FileText, GraduationCap } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 export const DashboardLayout = () => {
@@ -13,6 +13,7 @@ export const DashboardLayout = () => {
   const isOverview = location.pathname === "/dashboard";
   const isJobs = location.pathname.startsWith("/dashboard/jobs");
   const isApplications = location.pathname.startsWith("/dashboard/applications");
+  const isTraining = location.pathname.startsWith("/dashboard/training");
 
   const departmentLabel =
     typeof user?.target_department === "string"
@@ -75,6 +76,18 @@ export const DashboardLayout = () => {
                 <FileText className="w-4 h-4" />
                 My Applications
               </button>
+              <button
+                onClick={() => navigate("/dashboard/training")}
+                className={cn(
+                  "px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2",
+                  isTraining
+                    ? "bg-slate-100 text-slate-900"
+                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                )}
+              >
+                <GraduationCap className="w-4 h-4" />
+                Training
+              </button>
             </nav>
           </div>
 
@@ -128,6 +141,17 @@ export const DashboardLayout = () => {
               )}
             >
               <FileText className="w-4 h-4" /> Applications
+            </button>
+            <button
+              onClick={() => navigate("/dashboard/training")}
+              className={cn(
+                "flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 border-b-2",
+                isTraining
+                  ? "border-slate-900 text-slate-900"
+                  : "border-transparent text-slate-500"
+              )}
+            >
+              <GraduationCap className="w-4 h-4" /> Training
             </button>
         </div>
       </header>

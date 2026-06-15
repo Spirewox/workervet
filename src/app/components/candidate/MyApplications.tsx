@@ -8,9 +8,13 @@ import {
   Clock,
   BarChart3,
   ChevronDown,
+  RotateCcw,
+  GraduationCap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { axiosPost } from "../../lib/api";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
@@ -73,6 +77,20 @@ const ResultBreakdown = ({
   departmentId?: string;
 }) => {
   const navigate = useNavigate();
+  const [retaking, setRetaking] = useState(false);
+
+  const handleRetake = async () => {
+    if (!departmentId) return;
+    try {
+      setRetaking(true);
+      await axiosPost(`assessment/candidate/departments/${departmentId}`, {}, true);
+      navigate(`/assessment/${encodeURIComponent(departmentId)}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't start the assessment");
+    } finally {
+      setRetaking(false);
+    }
+  };
 
   if (!result || (!result.submitted_at && result.status !== "in_progress")) {
     return (
@@ -133,6 +151,22 @@ const ResultBreakdown = ({
 
       {result.submitted_at && (
         <p className="text-[11px] text-slate-400">Submitted {formatDate(result.submitted_at)}</p>
+      )}
+
+      {!inProgress && !passed && (
+        <div className="pt-1 grid grid-cols-2 gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => navigate("/dashboard/training")}
+          >
+            <GraduationCap className="w-3.5 h-3.5 mr-1.5" /> Train
+          </Button>
+          <Button size="sm" onClick={handleRetake} disabled={retaking || !departmentId}>
+            <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+            {retaking ? "Starting..." : "Retake"}
+          </Button>
+        </div>
       )}
     </div>
   );
