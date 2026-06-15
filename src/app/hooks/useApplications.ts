@@ -19,6 +19,8 @@ export interface IApplicationResult {
   result?: "pass" | "fail";
   status?: "in_progress" | "submitted" | "expired";
   submitted_at?: Date | string | null;
+  // Optional per-skill score breakdown for this assessment.
+  skills?: { skill_name: string; percentage: number }[];
 }
 
 export interface IApplication {

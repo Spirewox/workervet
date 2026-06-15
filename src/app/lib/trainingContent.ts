@@ -1,234 +1,455 @@
-// Built-in training content keyed by skill/category. Content is resolved by
-// fuzzy-matching the candidate's failed skill names against these entries; any
-// unrecognised category falls back to a generic professional-development
-// module. This keeps the training experience working without a backend; the
+// Built-in training content keyed by skill/category. Each category resolves to
+// a full video-based course: a description, video modules, downloadable
+// resources, and a short quick-assessment quiz. Content is matched by fuzzy
+// skill name with a generic fallback, so training works without a backend; the
 // resolver can later be swapped for a CMS/API-backed source.
 
-export interface TrainingLesson {
+// Price to unlock a single training course (one-time). Currency matches the
+// rest of the app (job salary ranges are shown in GBP).
+export const TRAINING_PRICE = 500;
+export const TRAINING_CURRENCY = "£";
+// Fee to unlock/issue the certificate after passing an assessment.
+export const CERTIFICATE_PRICE = 50;
+// Fee to ship a printed, framed hard-copy certificate.
+export const CERTIFICATE_HARDCOPY_FEE = 20;
+export const formatPrice = (amount = TRAINING_PRICE) =>
+  `${TRAINING_CURRENCY}${amount.toLocaleString()}`;
+
+export type ResourceType = "article" | "pdf" | "video" | "link";
+
+export interface TrainingResource {
+  label: string;
+  url: string;
+  type: ResourceType;
+}
+
+export interface TrainingVideoModule {
+  id: string;
   title: string;
-  body: string;
+  description: string;
+  durationLabel: string;
+  videoUrl: string;
 }
 
-export interface TrainingModule {
-  summary: string;
-  lessons: TrainingLesson[];
-  checklist: string[];
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  answerIndex: number;
 }
 
-const CONTENT: Record<string, TrainingModule> = {
-  trust: {
-    summary:
-      "Trust is built through consistency, honesty, and following through on commitments. Employers look for people whose words and actions reliably match.",
-    lessons: [
-      {
-        title: "Do what you say",
-        body: "Only commit to what you can deliver, then deliver it. When something slips, communicate early rather than letting it surprise others.",
-      },
-      {
-        title: "Be transparent under pressure",
-        body: "When a scenario tempts you to hide a mistake or shade the truth, the trustworthy choice is to surface it promptly with a plan to fix it.",
-      },
-      {
-        title: "Protect what's shared with you",
-        body: "Handle sensitive information and others' reputations carefully. Discretion is a core signal of trustworthiness.",
-      },
-    ],
-    checklist: [
-      "I disclose mistakes early instead of hiding them",
-      "I keep commitments or renegotiate them openly",
-      "I keep confidential information confidential",
-    ],
-  },
-  integrity: {
-    summary:
-      "Integrity means doing the right thing even when no one is watching and even when it's inconvenient. It shows up most in the hard, low-visibility choices.",
-    lessons: [
-      {
-        title: "Consistency over convenience",
-        body: "Apply the same standard whether or not you'll be observed or rewarded. Shortcuts that compromise honesty erode trust quickly.",
-      },
-      {
-        title: "Own your decisions",
-        body: "Take responsibility for outcomes rather than shifting blame. Accountability is integrity in action.",
-      },
-      {
-        title: "Refuse the gray area",
-        body: "When a scenario offers a small dishonest gain, the high-integrity answer almost always declines it and seeks a clean alternative.",
-      },
-    ],
-    checklist: [
-      "I act the same whether or not I'm being watched",
-      "I decline gains that require bending the rules",
-      "I take ownership instead of assigning blame",
-    ],
-  },
+export interface TrainingCourse {
+  title: string;
+  description: string;
+  modules: TrainingVideoModule[];
+  resources: TrainingResource[];
+  quiz: QuizQuestion[];
+  passMark: number; // fraction 0-1 of quiz questions needed to pass
+}
+
+// Stable public sample videos used as placeholders for course content.
+// Replace with real training videos (or a CMS/signed-URL source) in production.
+const V = (name: string) =>
+  `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/${name}.mp4`;
+const VIDEO_POOL = [
+  "BigBuckBunny",
+  "ElephantsDream",
+  "ForBiggerBlazes",
+  "ForBiggerEscapes",
+  "ForBiggerJoyrides",
+  "Sintel",
+  "TearsOfSteel",
+];
+const pickVideo = (i: number) => V(VIDEO_POOL[i % VIDEO_POOL.length]);
+
+const COURSES: Record<string, TrainingCourse> = {
   ethics: {
-    summary:
-      "Workplace ethics is about applying fairness, honesty, and respect to real situations — especially where rules, incentives, and people's interests collide.",
-    lessons: [
+    title: "Workplace Ethics",
+    description:
+      "Learn to apply fairness, honesty, and sound judgment to real situations where rules, incentives, and people's interests collide.",
+    modules: [
       {
-        title: "Identify the stakeholders",
-        body: "Before deciding, ask who is affected. Ethical answers weigh the impact on colleagues, customers, and the organisation, not just yourself.",
+        id: "ethics-1",
+        title: "Recognising an ethical dilemma",
+        description:
+          "Spot the moments where a decision affects others, and learn the simple test of whether you'd be comfortable explaining your choice openly.",
+        durationLabel: "6 min",
+        videoUrl: pickVideo(0),
       },
       {
-        title: "Follow policy, then judgment",
-        body: "Start from established rules and codes of conduct. Where they run out, choose the option you'd be comfortable explaining publicly.",
-      },
-      {
-        title: "Escalate, don't ignore",
-        body: "When you spot misconduct, raising it through the right channel is the ethical course — silence can make you complicit.",
+        id: "ethics-2",
+        title: "Policy, judgment, and escalation",
+        description:
+          "Start from the code of conduct, use judgment where rules run out, and escalate misconduct through the right channel instead of staying silent.",
+        durationLabel: "8 min",
+        videoUrl: pickVideo(1),
       },
     ],
-    checklist: [
-      "I consider who is affected before I act",
-      "I would be comfortable explaining my choice openly",
-      "I report misconduct through the proper channel",
+    resources: [
+      { label: "Ethical decision-making framework (PDF)", url: "#", type: "pdf" },
+      { label: "Worked scenarios: hard calls at work", url: "#", type: "article" },
     ],
+    quiz: [
+      {
+        id: "ethics-q1",
+        question:
+          "A colleague asks you to overlook a small policy breach 'just this once'. The most ethical response is to:",
+        options: [
+          "Agree, since it's small and no one will notice",
+          "Decline and follow the policy, raising it if it continues",
+          "Ignore it and hope it resolves itself",
+          "Do it but tell them not to ask again",
+        ],
+        answerIndex: 1,
+      },
+      {
+        id: "ethics-q2",
+        question: "A useful test for an ethical decision is whether you would:",
+        options: [
+          "Gain the most personally from it",
+          "Be comfortable explaining it openly to others",
+          "Finish it fastest",
+          "Avoid involving your manager",
+        ],
+        answerIndex: 1,
+      },
+      {
+        id: "ethics-q3",
+        question: "When you witness clear misconduct, the right first step is usually to:",
+        options: [
+          "Say nothing to avoid conflict",
+          "Confront the person publicly",
+          "Report it through the proper channel",
+          "Wait until someone else notices",
+        ],
+        answerIndex: 2,
+      },
+    ],
+    passMark: 0.67,
   },
   communication: {
-    summary:
-      "Strong communicators are clear, timely, and respectful. They listen first, confirm understanding, and adapt their message to the audience.",
-    lessons: [
+    title: "Effective Communication",
+    description:
+      "Become clear, timely, and respectful: listen first, confirm understanding, and adapt your message to your audience.",
+    modules: [
       {
-        title: "Listen to understand",
-        body: "Let the other person finish, then reflect back what you heard before responding. Most conflict comes from assumptions, not facts.",
+        id: "comm-1",
+        title: "Listening to understand",
+        description:
+          "Let people finish, reflect back what you heard, and replace assumptions with confirmed facts to prevent avoidable conflict.",
+        durationLabel: "5 min",
+        videoUrl: pickVideo(2),
       },
       {
-        title: "Be clear and concise",
-        body: "State the point first, then the detail. Avoid jargon and ambiguity, especially in writing where tone is easy to misread.",
-      },
-      {
-        title: "Communicate early and often",
-        body: "Share status, blockers, and bad news promptly. People forgive delays far more easily than silence.",
+        id: "comm-2",
+        title: "Clear, concise, and early",
+        description:
+          "Lead with the main point, cut jargon, and share status and bad news early — people forgive delays far more than silence.",
+        durationLabel: "7 min",
+        videoUrl: pickVideo(3),
       },
     ],
-    checklist: [
-      "I confirm I understood before responding",
-      "I lead with the main point, then supporting detail",
-      "I raise blockers and bad news early",
+    resources: [
+      { label: "Active listening checklist (PDF)", url: "#", type: "pdf" },
+      { label: "Writing clear workplace messages", url: "#", type: "article" },
     ],
+    quiz: [
+      {
+        id: "comm-q1",
+        question: "The best way to make sure you understood a request is to:",
+        options: [
+          "Assume you got it and start work",
+          "Reflect it back and confirm before responding",
+          "Wait and ask later if it goes wrong",
+          "Do part of it and see the reaction",
+        ],
+        answerIndex: 1,
+      },
+      {
+        id: "comm-q2",
+        question: "When delivering an update, you should generally:",
+        options: [
+          "Lead with the main point, then detail",
+          "Save the conclusion for the very end",
+          "Include every detail you can think of",
+          "Use as much jargon as possible",
+        ],
+        answerIndex: 0,
+      },
+      {
+        id: "comm-q3",
+        question: "You realise a deadline will slip. The best move is to:",
+        options: [
+          "Say nothing and hope to catch up",
+          "Tell people only once it's already late",
+          "Communicate early with a plan",
+          "Blame the workload",
+        ],
+        answerIndex: 2,
+      },
+    ],
+    passMark: 0.67,
   },
   professionalism: {
-    summary:
-      "Professionalism is the everyday discipline of being reliable, respectful, and composed — on time, prepared, and constructive even under stress.",
-    lessons: [
+    title: "Professionalism at Work",
+    description:
+      "Build the everyday discipline of being reliable, respectful, and composed — prepared, on time, and constructive under stress.",
+    modules: [
       {
+        id: "prof-1",
         title: "Reliability is the baseline",
-        body: "Show up prepared and on time, and meet deadlines. Dependability is what colleagues notice first.",
+        description:
+          "Show up prepared, on time, and meet deadlines. Dependability is what colleagues notice and remember first.",
+        durationLabel: "5 min",
+        videoUrl: pickVideo(4),
       },
       {
-        title: "Stay composed",
-        body: "Respond to frustration and conflict calmly. Reacting professionally to a difficult moment builds your reputation faster than avoiding one.",
+        id: "prof-2",
+        title: "Composure under pressure",
+        description:
+          "Respond to frustration and conflict calmly and respectfully — handling a hard moment well builds your reputation fast.",
+        durationLabel: "6 min",
+        videoUrl: pickVideo(5),
+      },
+    ],
+    resources: [
+      { label: "Professional conduct quick-guide (PDF)", url: "#", type: "pdf" },
+      { label: "Staying composed in difficult conversations", url: "#", type: "article" },
+    ],
+    quiz: [
+      {
+        id: "prof-q1",
+        question: "The most fundamental signal of professionalism is:",
+        options: [
+          "Working the longest hours",
+          "Being reliable — prepared, on time, meeting deadlines",
+          "Never asking for help",
+          "Always agreeing with your manager",
+        ],
+        answerIndex: 1,
       },
       {
-        title: "Respect boundaries and roles",
-        body: "Treat everyone with courtesy regardless of seniority, and keep personal and work matters appropriately separate.",
+        id: "prof-q2",
+        question: "A customer becomes rude and frustrated. The professional response is to:",
+        options: [
+          "Match their tone",
+          "Stay calm and focus on resolving the issue",
+          "Walk away without a word",
+          "Argue until they back down",
+        ],
+        answerIndex: 1,
+      },
+      {
+        id: "prof-q3",
+        question: "Treating colleagues professionally means:",
+        options: [
+          "Being courteous only to senior staff",
+          "Respect for everyone regardless of role",
+          "Keeping to yourself entirely",
+          "Sharing office gossip to bond",
+        ],
+        answerIndex: 1,
       },
     ],
-    checklist: [
-      "I arrive prepared and meet my deadlines",
-      "I stay calm and constructive under pressure",
-      "I treat everyone with consistent respect",
-    ],
+    passMark: 0.67,
   },
-  teamwork: {
-    summary:
-      "Effective team members share credit, support others, and put the shared goal ahead of individual recognition.",
-    lessons: [
+  integrity: {
+    title: "Integrity & Accountability",
+    description:
+      "Do the right thing even when it's inconvenient or unobserved, and own your outcomes instead of explaining them away.",
+    modules: [
       {
-        title: "Make others successful",
-        body: "Offer help before being asked and share information freely. Teams reward people who lift the group, not just themselves.",
+        id: "int-1",
+        title: "Consistency over convenience",
+        description:
+          "Apply the same standard whether or not you're watched or rewarded, and decline gains that require bending the rules.",
+        durationLabel: "6 min",
+        videoUrl: pickVideo(0),
       },
       {
-        title: "Handle disagreement well",
-        body: "Debate ideas, not people. Once a decision is made, commit to it even if it wasn't your preference.",
-      },
-      {
-        title: "Share credit and ownership",
-        body: "Acknowledge contributions publicly and absorb blame privately. This is how trust compounds within a team.",
+        id: "int-2",
+        title: "Owning the outcome",
+        description:
+          "Lead with 'here's what I'll do to fix it', close the loop on commitments, and turn mistakes into credibility by learning out loud.",
+        durationLabel: "7 min",
+        videoUrl: pickVideo(6),
       },
     ],
-    checklist: [
-      "I offer help and share information proactively",
-      "I disagree respectfully and then commit",
-      "I give credit to others generously",
+    resources: [
+      { label: "Accountability self-check (PDF)", url: "#", type: "pdf" },
+      { label: "Owning mistakes the right way", url: "#", type: "article" },
     ],
+    quiz: [
+      {
+        id: "int-q1",
+        question: "Integrity is best described as doing the right thing:",
+        options: [
+          "Only when it benefits you",
+          "Even when no one is watching",
+          "Only when required by a manager",
+          "When it's convenient",
+        ],
+        answerIndex: 1,
+      },
+      {
+        id: "int-q2",
+        question: "Something went wrong on your task. The accountable response is to:",
+        options: [
+          "Explain why it wasn't your fault",
+          "Say what you'll do to put it right",
+          "Hope no one noticed",
+          "Pass it to a colleague",
+        ],
+        answerIndex: 1,
+      },
+      {
+        id: "int-q3",
+        question: "You're offered a small dishonest gain with no chance of being caught. You should:",
+        options: [
+          "Take it — no one will know",
+          "Decline and find a clean alternative",
+          "Take it but feel bad",
+          "Ask a colleague to do it instead",
+        ],
+        answerIndex: 1,
+      },
+    ],
+    passMark: 0.67,
   },
-  accountability: {
-    summary:
-      "Accountability means owning your results — good and bad — and acting to put things right rather than explaining them away.",
-    lessons: [
+  trust: {
+    title: "Building Trust",
+    description:
+      "Earn trust through consistency, honesty, and follow-through — making your words and actions reliably match.",
+    modules: [
       {
-        title: "Own the outcome",
-        body: "When something goes wrong on your watch, lead with 'here's what I'll do to fix it' rather than 'here's why it wasn't my fault'.",
+        id: "trust-1",
+        title: "Do what you say",
+        description:
+          "Commit only to what you can deliver, then deliver it — and communicate early when something is at risk of slipping.",
+        durationLabel: "5 min",
+        videoUrl: pickVideo(2),
       },
       {
-        title: "Close the loop",
-        body: "Follow up on commitments and confirm they're done. Unfinished follow-through is the most common accountability gap.",
-      },
-      {
-        title: "Learn out loud",
-        body: "Treat mistakes as data. Sharing what you learned turns a failure into credibility.",
-      },
-    ],
-    checklist: [
-      "I own problems instead of explaining them away",
-      "I follow up until commitments are truly done",
-      "I share lessons from my mistakes",
-    ],
-  },
-  confidentiality: {
-    summary:
-      "Confidentiality is about safeguarding sensitive information — protecting people, customers, and the organisation by sharing only on a need-to-know basis.",
-    lessons: [
-      {
-        title: "Default to discretion",
-        body: "Assume information is private unless you know it's meant to be shared. When unsure, ask before disclosing.",
-      },
-      {
-        title: "Mind the channel",
-        body: "Sensitive details belong in secure, approved channels — never casual chat, personal devices, or public spaces.",
-      },
-      {
-        title: "Respect after you leave the room",
-        body: "Confidentiality doesn't end when a conversation does. Don't repeat what was shared in confidence.",
+        id: "trust-2",
+        title: "Transparency and discretion",
+        description:
+          "Surface mistakes promptly with a fix, and protect sensitive information and others' reputations carefully.",
+        durationLabel: "6 min",
+        videoUrl: pickVideo(3),
       },
     ],
-    checklist: [
-      "I share sensitive information only on a need-to-know basis",
-      "I use secure, approved channels for private details",
-      "I keep confidences even after the moment passes",
+    resources: [
+      { label: "Trust-building behaviours (PDF)", url: "#", type: "pdf" },
+      { label: "Handling confidential information", url: "#", type: "article" },
     ],
+    quiz: [
+      {
+        id: "trust-q1",
+        question: "Trust is built mainly through:",
+        options: [
+          "Big one-off gestures",
+          "Consistency and following through on commitments",
+          "Telling people what they want to hear",
+          "Avoiding difficult conversations",
+        ],
+        answerIndex: 1,
+      },
+      {
+        id: "trust-q2",
+        question: "You made a mistake that others haven't noticed yet. You should:",
+        options: [
+          "Hide it and hope it's fine",
+          "Surface it promptly with a plan to fix it",
+          "Wait until someone asks",
+          "Blame a system error",
+        ],
+        answerIndex: 1,
+      },
+      {
+        id: "trust-q3",
+        question: "A colleague shares something in confidence. The trustworthy thing to do is:",
+        options: [
+          "Repeat it to bond with others",
+          "Keep it confidential",
+          "Share it only with your manager for fun",
+          "Post about it indirectly",
+        ],
+        answerIndex: 1,
+      },
+    ],
+    passMark: 0.67,
   },
 };
 
-const generic = (skillName: string): TrainingModule => ({
-  summary: `Strengthening "${skillName}" is about applying sound judgment consistently in real workplace situations. Focus on understanding the principle, then practising it in everyday decisions.`,
-  lessons: [
-    {
-      title: "Understand what good looks like",
-      body: `Review what strong ${skillName.toLowerCase()} looks like in practice, and the behaviours assessors are looking for in each scenario.`,
-    },
-    {
-      title: "Slow down on the hard cases",
-      body: "The questions you missed usually involve a trade-off. Read each scenario carefully, identify who is affected, and choose the response you could defend openly.",
-    },
-    {
-      title: "Practise deliberately",
-      body: `Reflect on recent situations where ${skillName.toLowerCase()} mattered, and rehearse how you'd handle them before retaking the assessment.`,
-    },
-  ],
-  checklist: [
-    "I can describe what strong performance looks like here",
-    "I pause to weigh trade-offs on difficult scenarios",
-    "I've rehearsed how I'd respond before retaking",
-  ],
-});
+const generic = (skillName: string): TrainingCourse => {
+  const lower = skillName.toLowerCase();
+  return {
+    title: skillName,
+    description: `Strengthen "${skillName}" by understanding what strong performance looks like, then practising it in everyday workplace decisions.`,
+    modules: [
+      {
+        id: "gen-1",
+        title: `What good ${lower} looks like`,
+        description: `Review the behaviours assessors look for in ${lower}, and the common mistakes that lower a score.`,
+        durationLabel: "6 min",
+        videoUrl: pickVideo(0),
+      },
+      {
+        id: "gen-2",
+        title: "Applying it to hard scenarios",
+        description:
+          "Slow down on trade-off questions: identify who is affected and choose the response you could defend openly.",
+        durationLabel: "7 min",
+        videoUrl: pickVideo(1),
+      },
+    ],
+    resources: [
+      { label: `${skillName} quick-reference (PDF)`, url: "#", type: "pdf" },
+      { label: "Workplace scenario practice", url: "#", type: "article" },
+    ],
+    quiz: [
+      {
+        id: "gen-q1",
+        question: `When a ${lower} scenario involves a trade-off, you should first:`,
+        options: [
+          "Pick the fastest option",
+          "Identify who is affected and weigh the impact",
+          "Choose what benefits you most",
+          "Avoid deciding",
+        ],
+        answerIndex: 1,
+      },
+      {
+        id: "gen-q2",
+        question: "A good check before committing to a decision is whether you could:",
+        options: [
+          "Keep it secret",
+          "Explain and defend it openly",
+          "Finish it without telling anyone",
+          "Undo it later",
+        ],
+        answerIndex: 1,
+      },
+      {
+        id: "gen-q3",
+        question: "The best way to improve before a retake is to:",
+        options: [
+          "Guess faster next time",
+          "Rehearse how you'd handle real situations",
+          "Memorise the previous answers",
+          "Skip the hard questions",
+        ],
+        answerIndex: 1,
+      },
+    ],
+    passMark: 0.67,
+  };
+};
 
-export const getTrainingModule = (skillName: string): TrainingModule => {
+export const getTrainingCourse = (skillName: string): TrainingCourse => {
   const key = (skillName || "").trim().toLowerCase();
-  for (const entry of Object.keys(CONTENT)) {
-    if (key.includes(entry)) return CONTENT[entry];
+  for (const entry of Object.keys(COURSES)) {
+    if (key.includes(entry)) return COURSES[entry];
   }
   return generic(skillName || "this skill");
 };

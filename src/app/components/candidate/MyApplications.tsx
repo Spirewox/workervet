@@ -28,6 +28,7 @@ import {
 } from "../../hooks/useApplications";
 import { useCandidateAssessmentList } from "../../hooks/useDashboard";
 import { useCandidateSkills } from "../../hooks/useCandidates";
+import { CertificateAction } from "./CertificateAction";
 import {
   Pagination,
   PaginationContent,
@@ -72,12 +73,15 @@ const scoreTone = (percentage: number) => {
 const ResultBreakdown = ({
   result,
   departmentId,
+  courseTitle,
 }: {
   result?: IApplicationResult;
   departmentId?: string;
+  courseTitle?: string;
 }) => {
   const navigate = useNavigate();
   const [retaking, setRetaking] = useState(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   const handleRetake = async () => {
     if (!departmentId) return;
@@ -151,6 +155,43 @@ const ResultBreakdown = ({
 
       {result.submitted_at && (
         <p className="text-[11px] text-slate-400">Submitted {formatDate(result.submitted_at)}</p>
+      )}
+
+      {!inProgress && !!result.skills?.length && (
+        <div>
+          <button
+            onClick={() => setShowBreakdown((s) => !s)}
+            className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800"
+          >
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showBreakdown ? "rotate-180" : ""}`} />
+            {showBreakdown ? "Hide score breakdown" : "View score breakdown"}
+          </button>
+          {showBreakdown && (
+            <div className="mt-3 space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+              {result.skills.map((skill) => {
+                const t = scoreTone(skill.percentage);
+                return (
+                  <div key={skill.skill_name} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-600">{skill.skill_name}</span>
+                      <span className={`font-semibold ${t.text}`}>{skill.percentage}%</span>
+                    </div>
+                    <Progress value={skill.percentage} className={`h-1.5 ${t.bar}`} />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!inProgress && passed && result.assessment_id && (
+        <CertificateAction
+          assessmentId={result.assessment_id}
+          courseTitle={courseTitle || "Assessment"}
+          scoreLabel={`${result.percentage ?? 0}%`}
+          className="w-full"
+        />
       )}
 
       {!inProgress && !passed && (
@@ -331,7 +372,11 @@ export const MyApplicationsPage = () => {
                     )}
                   </div>
 
-                  <ResultBreakdown result={result} departmentId={deptId} />
+                  <ResultBreakdown
+                    result={result}
+                    departmentId={deptId}
+                    courseTitle={department?.department_name}
+                  />
 
                   <div className="mt-4">
                     <Button

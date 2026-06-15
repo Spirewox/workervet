@@ -12,13 +12,24 @@ if (!rootElement) {
 
 const root = ReactDOM.createRoot(rootElement);
 const queryClient = new QueryClient();
-root.render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-      {/* <Toaster /> */}
-      <Sonner />
-      <ToastContainer />
-    </QueryClientProvider>
-  </React.StrictMode>
-);
+
+async function bootstrap() {
+  // Dev-only: serve sample data with no backend when VITE_USE_MOCKS=true.
+  if (import.meta.env.VITE_USE_MOCKS === 'true') {
+    const { installMockApi } = await import('./src/app/lib/mockApi');
+    installMockApi();
+  }
+
+  root.render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <App />
+        {/* <Toaster /> */}
+        <Sonner />
+        <ToastContainer />
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+}
+
+bootstrap();

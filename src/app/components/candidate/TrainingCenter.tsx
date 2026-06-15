@@ -1,19 +1,21 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   GraduationCap,
   BookOpen,
   CheckCircle2,
-  Circle,
   Sparkles,
-  ArrowRight,
+  PlayCircle,
+  Lock,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import { useAuth } from "../../context/AuthContext";
 import { useCandidateSkills, CandidateSkill } from "../../hooks/useCandidates";
-import { getTrainingModule } from "../../lib/trainingContent";
+import { getTrainingCourse, formatPrice } from "../../lib/trainingContent";
+import { useTrainingAccess } from "../../hooks/useTraining";
+import { TrainingCourse } from "./TrainingCourse";
 
 const PASS_THRESHOLD = 70;
 
@@ -25,99 +27,61 @@ const scoreTone = (percentage: number) => {
   return { text: "text-red-600", bar: "[&_[data-slot=progress-indicator]]:bg-red-500" };
 };
 
-const TrainingModuleCard = ({ skill }: { skill: CandidateSkill }) => {
-  const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const [done, setDone] = useState<Record<number, boolean>>({});
-
+const TrainingCard = ({
+  skill,
+  unlocked,
+  onStart,
+}: {
+  skill: CandidateSkill;
+  unlocked: boolean;
+  onStart: () => void;
+}) => {
   const pct = skill.percentage ?? 0;
   const tone = scoreTone(pct);
-  const module = useMemo(() => getTrainingModule(skill.skill_name), [skill.skill_name]);
-
-  const completed = Object.values(done).filter(Boolean).length;
-  const allDone = completed === module.checklist.length;
+  const course = getTrainingCourse(skill.skill_name);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-      <div className="p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-              <BookOpen className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900">{skill.skill_name}</h3>
-              <p className="text-xs text-slate-500">Below the recommended {PASS_THRESHOLD}% benchmark</p>
-            </div>
+    <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+            <BookOpen className="w-5 h-5 text-red-600" />
           </div>
-          <span className={`text-2xl font-black ${tone.text}`}>{pct}%</span>
+          <div>
+            <h3 className="font-semibold text-slate-900">{course.title}</h3>
+            <p className="text-xs text-slate-500">Below the recommended {PASS_THRESHOLD}% benchmark</p>
+          </div>
         </div>
-
-        <div className="mt-4">
-          <Progress value={pct} className={tone.bar} />
-        </div>
-
-        <Button
-          variant={open ? "outline" : "default"}
-          className="w-full mt-5"
-          onClick={() => setOpen((o) => !o)}
-        >
-          {open ? "Hide Training" : "Start Training"}
-        </Button>
+        <span className={`text-2xl font-black ${tone.text}`}>{pct}%</span>
       </div>
 
-      {open && (
-        <div className="border-t border-slate-100 bg-slate-50/50 p-6 space-y-6 animate-in fade-in slide-in-from-top-1 duration-300">
-          <p className="text-sm text-slate-600 leading-relaxed">{module.summary}</p>
+      <p className="text-sm text-slate-600 mt-4 leading-relaxed flex-1">{course.description}</p>
 
-          <div className="space-y-4">
-            {module.lessons.map((lesson, i) => (
-              <div key={i} className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
-                  {i + 1}
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900 text-sm">{lesson.title}</p>
-                  <p className="text-sm text-slate-600 leading-relaxed mt-0.5">{lesson.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+      <div className="mt-4">
+        <Progress value={pct} className={tone.bar} />
+      </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">
-              Readiness check
-            </p>
-            <div className="space-y-2">
-              {module.checklist.map((item, i) => (
-                <button
-                  key={i}
-                  onClick={() => setDone((d) => ({ ...d, [i]: !d[i] }))}
-                  className="flex items-center gap-2 text-left w-full group"
-                >
-                  {done[i] ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  ) : (
-                    <Circle className="w-4 h-4 text-slate-300 group-hover:text-slate-400 shrink-0" />
-                  )}
-                  <span className={`text-sm ${done[i] ? "text-slate-400 line-through" : "text-slate-700"}`}>
-                    {item}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <Button
-            className="w-full"
-            disabled={!allDone}
-            onClick={() => navigate("/dashboard")}
-          >
-            {allDone ? "Ready — Retake Assessment" : `Complete the readiness check (${completed}/${module.checklist.length})`}
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+      <div className="flex items-center justify-between mt-3">
+        <div className="flex items-center gap-3 text-[11px] text-slate-400 font-medium">
+          <span className="flex items-center gap-1">
+            <PlayCircle className="w-3.5 h-3.5" /> {course.modules.length} video modules
+          </span>
+          <span>· {course.quiz.length}-question quiz</span>
         </div>
-      )}
+        {unlocked ? (
+          <Badge variant="success" className="gap-1">
+            <CheckCircle2 className="w-3 h-3" /> Unlocked
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="gap-1 border-amber-200 text-amber-700 bg-amber-50">
+            <Lock className="w-3 h-3" /> {formatPrice()}
+          </Badge>
+        )}
+      </div>
+
+      <Button className="w-full mt-5" onClick={onStart}>
+        {unlocked ? "Continue Training" : `Unlock for ${formatPrice()}`}
+      </Button>
     </div>
   );
 };
@@ -126,10 +90,18 @@ export const TrainingCenterPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: skills, isLoading } = useCandidateSkills(user?._id ?? "");
+  const { data: access } = useTrainingAccess();
+  const [activeSkill, setActiveSkill] = useState<string | null>(null);
+
+  const isUnlocked = (skillName: string) => !!access?.unlocked?.includes(skillName);
 
   const scored = (skills?.skills ?? []).filter((s) => s.percentage != null);
   const weak = scored.filter((s) => (s.percentage ?? 0) < PASS_THRESHOLD);
   const strong = scored.filter((s) => (s.percentage ?? 0) >= PASS_THRESHOLD);
+
+  if (activeSkill) {
+    return <TrainingCourse skillName={activeSkill} onBack={() => setActiveSkill(null)} />;
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -140,7 +112,7 @@ export const TrainingCenterPage = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Training Center</h1>
           <p className="text-slate-500">
-            Build up the categories where you fell short, then retake the assessment.
+            Video courses to build up the categories where you fell short, then retake the assessment.
           </p>
         </div>
       </div>
@@ -148,7 +120,7 @@ export const TrainingCenterPage = () => {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-44 rounded-2xl border border-slate-100 bg-white animate-pulse" />
+            <div key={i} className="h-56 rounded-2xl border border-slate-100 bg-white animate-pulse" />
           ))}
         </div>
       ) : scored.length === 0 ? (
@@ -172,12 +144,17 @@ export const TrainingCenterPage = () => {
           <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-800">
             You have <span className="font-semibold">{weak.length}</span> categor
             {weak.length === 1 ? "y" : "ies"} below the {PASS_THRESHOLD}% benchmark. Work through the
-            training below to improve before your next attempt.
+            video training below to improve before your next attempt.
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {weak.map((skill) => (
-              <TrainingModuleCard key={skill.skill_id} skill={skill} />
+              <TrainingCard
+                key={skill.skill_id}
+                skill={skill}
+                unlocked={isUnlocked(skill.skill_name)}
+                onStart={() => setActiveSkill(skill.skill_name)}
+              />
             ))}
           </div>
         </>
