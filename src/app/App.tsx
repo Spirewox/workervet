@@ -13,6 +13,7 @@ import { ToastContainer } from 'react-toastify';
 import { DashboardLayout } from './components/candidate/DashboardLayout';
 import { DashboardOverviewPage } from './components/candidate/DashboardOverview';
 import { JobBoardPage } from './components/candidate/JobBoardPage';
+import { MyApplicationsPage } from './components/candidate/MyApplications';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -70,6 +71,7 @@ function AppContent() {
       >
         <Route index element={<DashboardOverviewPage />} />
         <Route path="jobs" element={<JobBoardPage />} />
+        <Route path="applications" element={<MyApplicationsPage />} />
       </Route>
       {/* <Route path="/dashboard" element={
         <ProtectedRoute>

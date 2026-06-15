@@ -2,7 +2,7 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "../ui/button";
-import { LayoutDashboard, Briefcase, LogOut, ShieldCheck, UserIcon } from "lucide-react";
+import { LayoutDashboard, Briefcase, LogOut, ShieldCheck, UserIcon, FileText } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 export const DashboardLayout = () => {
@@ -12,6 +12,12 @@ export const DashboardLayout = () => {
 
   const isOverview = location.pathname === "/dashboard";
   const isJobs = location.pathname.startsWith("/dashboard/jobs");
+  const isApplications = location.pathname.startsWith("/dashboard/applications");
+
+  const departmentLabel =
+    typeof user?.target_department === "string"
+      ? user.target_department
+      : (user?.target_department as { department_name?: string } | undefined)?.department_name;
 
   const handleLogout = () => {
     logout();
@@ -57,6 +63,18 @@ export const DashboardLayout = () => {
                 <Briefcase className="w-4 h-4" />
                 Job Board
               </button>
+              <button
+                onClick={() => navigate("/dashboard/applications")}
+                className={cn(
+                  "px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2",
+                  isApplications
+                    ? "bg-slate-100 text-slate-900"
+                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                )}
+              >
+                <FileText className="w-4 h-4" />
+                My Applications
+              </button>
             </nav>
           </div>
 
@@ -66,8 +84,8 @@ export const DashboardLayout = () => {
                     <UserIcon className="w-4 h-4 text-slate-600" />
                 </div>
                 <div className="flex flex-col text-right hidden sm:flex">
-                  <span className="text-sm font-semibold text-slate-900 leading-none">{user?.name}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">{user?.targetDepartment || 'Candidate'}</span>
+                  <span className="text-sm font-semibold text-slate-900 leading-none">{user?.full_name}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">{departmentLabel || 'Candidate'}</span>
                 </div>
               </div>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
@@ -94,11 +112,22 @@ export const DashboardLayout = () => {
               className={cn(
                 "flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 border-b-2",
                 isJobs
-                  ? "border-slate-900 text-slate-900" 
+                  ? "border-slate-900 text-slate-900"
                   : "border-transparent text-slate-500"
               )}
             >
               <Briefcase className="w-4 h-4" /> Job Board
+            </button>
+            <button
+              onClick={() => navigate("/dashboard/applications")}
+              className={cn(
+                "flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 border-b-2",
+                isApplications
+                  ? "border-slate-900 text-slate-900"
+                  : "border-transparent text-slate-500"
+              )}
+            >
+              <FileText className="w-4 h-4" /> Applications
             </button>
         </div>
       </header>
