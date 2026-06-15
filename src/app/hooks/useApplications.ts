@@ -9,10 +9,25 @@ export type ApplicationStatus =
   | "rejected"
   | "hired";
 
+// Assessment result attached to a specific application. When the backend
+// embeds this, it gives a true per-job result; otherwise the UI falls back
+// to the candidate's department-level assessment.
+export interface IApplicationResult {
+  assessment_id?: string;
+  score?: string;
+  percentage?: number;
+  result?: "pass" | "fail";
+  status?: "in_progress" | "submitted" | "expired";
+  submitted_at?: Date | string | null;
+}
+
 export interface IApplication {
   _id: string;
   job: IJob;
   status: ApplicationStatus;
+  // Optional per-application assessment result, if the backend populates it.
+  assessment?: IApplicationResult;
+  result?: IApplicationResult;
   createdAt: Date;
   updatedAt?: Date;
 }

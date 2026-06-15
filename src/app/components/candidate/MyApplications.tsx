@@ -19,12 +19,10 @@ import { useAuth } from "../../context/AuthContext";
 import {
   ApplicationStatus,
   IApplication,
+  IApplicationResult,
   useMyApplications,
 } from "../../hooks/useApplications";
-import {
-  CandidateAssessmentListRes,
-  useCandidateAssessmentList,
-} from "../../hooks/useDashboard";
+import { useCandidateAssessmentList } from "../../hooks/useDashboard";
 import { useCandidateSkills } from "../../hooks/useCandidates";
 import {
   Pagination,
@@ -67,21 +65,24 @@ const scoreTone = (percentage: number) => {
   return { text: "text-red-600", bar: "[&_[data-slot=progress-indicator]]:bg-red-500" };
 };
 
-const ResultBreakdown = ({ assessment }: { assessment?: CandidateAssessmentListRes }) => {
+const ResultBreakdown = ({
+  result,
+  departmentId,
+}: {
+  result?: IApplicationResult;
+  departmentId?: string;
+}) => {
   const navigate = useNavigate();
 
-  if (!assessment || (!assessment.submitted_at && assessment.status !== "in_progress")) {
+  if (!result || (!result.submitted_at && result.status !== "in_progress")) {
     return (
       <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 text-center">
         <p className="text-xs text-slate-500 mb-2">No assessment results yet for this role.</p>
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
-            assessment?.department?._id &&
-            navigate(`/assessment/${encodeURIComponent(assessment.department._id)}`)
-          }
-          disabled={!assessment?.department?._id}
+          onClick={() => departmentId && navigate(`/assessment/${encodeURIComponent(departmentId)}`)}
+          disabled={!departmentId}
         >
           Take Assessment
         </Button>
@@ -89,9 +90,9 @@ const ResultBreakdown = ({ assessment }: { assessment?: CandidateAssessmentListR
     );
   }
 
-  const passed = assessment.result === "pass";
-  const inProgress = assessment.status === "in_progress" && !assessment.submitted_at;
-  const tone = scoreTone(assessment.percentage ?? 0);
+  const passed = result.result === "pass";
+  const inProgress = result.status === "in_progress" && !result.submitted_at;
+  const tone = scoreTone(result.percentage ?? 0);
 
   return (
     <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4 space-y-3">
@@ -119,19 +120,19 @@ const ResultBreakdown = ({ assessment }: { assessment?: CandidateAssessmentListR
           <div className="flex items-end justify-between">
             <div>
               <p className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Score</p>
-              <p className="text-sm font-semibold text-slate-700">{assessment.score || "—"}</p>
+              <p className="text-sm font-semibold text-slate-700">{result.score || "—"}</p>
             </div>
             <div className="text-right">
               <p className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Accuracy</p>
-              <p className={`text-2xl font-black ${tone.text}`}>{assessment.percentage ?? 0}%</p>
+              <p className={`text-2xl font-black ${tone.text}`}>{result.percentage ?? 0}%</p>
             </div>
           </div>
-          <Progress value={assessment.percentage ?? 0} className={tone.bar} />
+          <Progress value={result.percentage ?? 0} className={tone.bar} />
         </>
       )}
 
-      {assessment.submitted_at && (
-        <p className="text-[11px] text-slate-400">Submitted {formatDate(assessment.submitted_at)}</p>
+      {result.submitted_at && (
+        <p className="text-[11px] text-slate-400">Submitted {formatDate(result.submitted_at)}</p>
       )}
     </div>
   );
@@ -203,16 +204,20 @@ export const MyApplicationsPage = () => {
   const totalPages = data?.meta?.totalPages || 1;
 
   // Map a job's department -> the candidate's assessment for that department,
-  // so each application can show its own result breakdown.
+  // used as a fallback when the application has no embedded result.
   const assessmentByDept = useMemo(() => {
-    const map = new Map<string, CandidateAssessmentListRes>();
+    const map = new Map<string, IApplicationResult>();
     (assessments ?? []).forEach((a) => {
       if (a.department?._id) map.set(a.department._id, a);
     });
     return map;
   }, [assessments]);
 
-  const resolveAssessment = (application: IApplication) =>
+  // Prefer a per-application result from the backend; otherwise fall back to
+  // the candidate's department-level assessment result.
+  const resolveResult = (application: IApplication): IApplicationResult | undefined =>
+    application.assessment ??
+    application.result ??
     assessmentByDept.get(departmentId(application.job?.department) ?? "");
 
   return (
@@ -252,7 +257,8 @@ export const MyApplicationsPage = () => {
               const job = application.job;
               const department = job?.department as Department | undefined;
               const status = STATUS_META[application.status] ?? STATUS_META.pending;
-              const assessment = resolveAssessment(application);
+              const result = resolveResult(application);
+              const deptId = departmentId(application.job?.department);
 
               return (
                 <div
@@ -291,7 +297,7 @@ export const MyApplicationsPage = () => {
                     )}
                   </div>
 
-                  <ResultBreakdown assessment={assessment} />
+                  <ResultBreakdown result={result} departmentId={deptId} />
 
                   <div className="mt-4">
                     <Button
