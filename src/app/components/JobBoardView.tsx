@@ -75,7 +75,7 @@ export const JobBoardView: React.FC = () => {
                  <input 
                      type="text" 
                      placeholder="Search roles..." 
-                     className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent hover:border-slate-200 focus:border-blue-400 focus:bg-white rounded-2xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all shadow-sm"
+                     className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent hover:border-slate-200 focus:border-blue-400 focus:bg-white rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all shadow-sm"
                      value={searchTerm}
                      onChange={(e) => setSearchTerm(e.target.value)}
                  />
@@ -103,7 +103,7 @@ export const JobBoardView: React.FC = () => {
             jobs?.data?.map((job) => (
               <div 
                 key={job?._id} 
-                className="group bg-white rounded-2xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 cursor-pointer flex flex-col items-start relative overflow-hidden"
+                className="group bg-white rounded-xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 cursor-pointer flex flex-col items-start relative overflow-hidden"
                 onClick={() => handleSelectJob(job._id)}
               >
                 <div className="flex justify-between items-start w-full mb-4">

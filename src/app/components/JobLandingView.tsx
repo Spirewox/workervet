@@ -143,7 +143,7 @@ export const JobLandingView: React.FC = () => {
               {job?.requirements && (
                 <section>
                   <h3 className="text-lg font-semibold text-slate-900 mb-4">Requirements</h3>
-                  <div className="text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                  <div className="text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50 rounded-xl p-6 border border-slate-100">
                     {job.requirements}
                   </div>
                 </section>
@@ -163,7 +163,7 @@ export const JobLandingView: React.FC = () => {
                     <Share2 className="w-4 h-4" /> Share this role
                 </button>
 
-                <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100/50">
+                <div className="bg-blue-50/50 rounded-xl p-5 border border-blue-100/50">
                     <div className="flex items-start gap-3">
                         <ShieldCheck className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
                         <div>

@@ -41,7 +41,7 @@ const TrainingCard = ({
   const course = getTrainingCourse(skill.skill_name);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col">
+    <div className="bg-white rounded-xl border border-slate-100 p-6 flex flex-col">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
@@ -120,7 +120,7 @@ export const TrainingCenterPage = () => {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-56 rounded-2xl border border-slate-100 bg-white animate-pulse" />
+            <div key={i} className="h-56 rounded-xl border border-slate-100 bg-white animate-pulse" />
           ))}
         </div>
       ) : scored.length === 0 ? (
@@ -161,7 +161,7 @@ export const TrainingCenterPage = () => {
       )}
 
       {strong.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-100 p-6">
+        <div className="bg-white rounded-xl border border-slate-100 p-6">
           <h2 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Your strengths
           </h2>

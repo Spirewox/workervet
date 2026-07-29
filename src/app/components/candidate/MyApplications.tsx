@@ -221,7 +221,7 @@ const SkillProfilePanel = () => {
   if (isLoading || !skills || !skills.skills?.length) return null;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-6">
+    <div className="bg-white rounded-xl border border-slate-100 p-6">
       <button
         className="w-full flex items-center justify-between text-left"
         onClick={() => setOpen((o) => !o)}
@@ -309,7 +309,7 @@ export const MyApplicationsPage = () => {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-72 rounded-2xl border border-slate-100 bg-white animate-pulse" />
+            <div key={i} className="h-72 rounded-xl border border-slate-100 bg-white animate-pulse" />
           ))}
         </div>
       ) : isError ? (
@@ -338,7 +338,7 @@ export const MyApplicationsPage = () => {
               return (
                 <div
                   key={application._id}
-                  className="group bg-white rounded-2xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-xl transition-all duration-300 flex flex-col"
+                  className="group bg-white rounded-xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-xl transition-all duration-300 flex flex-col"
                 >
                   <div className="flex justify-between items-start mb-4 gap-3">
                     <div className="flex items-center gap-3 min-w-0">

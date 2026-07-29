@@ -142,7 +142,7 @@ export const JobBoardPage = () => {
                 return (
                 <div 
                     key={job._id} 
-                    className="group bg-white rounded-2xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-xl transition-all duration-300 flex flex-col relative cursor-pointer"
+                    className="group bg-white rounded-xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-xl transition-all duration-300 flex flex-col relative cursor-pointer"
                     onClick={() => navigate(`/jobs/${job._id}`)}
                 >
                     <div className="flex justify-between items-start mb-4">

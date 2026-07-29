@@ -178,7 +178,7 @@ export const TrainingCourse = ({
     return (
       <div className="space-y-6">
         {BackLink}
-        <div className="h-64 rounded-2xl border border-slate-100 bg-white animate-pulse" />
+        <div className="h-64 rounded-xl border border-slate-100 bg-white animate-pulse" />
       </div>
     );
   }
@@ -187,9 +187,9 @@ export const TrainingCourse = ({
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
         {BackLink}
-        <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-slate-100 overflow-hidden">
+        <div className="max-w-2xl mx-auto bg-white rounded-xl border border-slate-100 overflow-hidden">
           <div className="bg-slate-900 text-white p-8 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center mx-auto mb-4">
               <Lock className="w-7 h-7 text-amber-400" />
             </div>
             <Badge className="bg-amber-500 text-white border-none mb-3">Premium Training</Badge>
@@ -248,7 +248,7 @@ export const TrainingCourse = ({
       </button>
 
       {/* Course header */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6">
+      <div className="bg-white rounded-xl border border-slate-100 p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <Badge variant="secondary" className="mb-2">
@@ -274,7 +274,7 @@ export const TrainingCourse = ({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Video player + active module */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="bg-black rounded-2xl overflow-hidden border border-slate-200">
+            <div className="bg-black rounded-xl overflow-hidden border border-slate-200">
               <video
                 key={activeModule.id}
                 src={activeModule.videoUrl}
@@ -283,7 +283,7 @@ export const TrainingCourse = ({
                 className="w-full aspect-video bg-black"
               />
             </div>
-            <div className="bg-white rounded-2xl border border-slate-100 p-6">
+            <div className="bg-white rounded-xl border border-slate-100 p-6">
               <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mb-1">
                 <Clock className="w-3.5 h-3.5" /> {activeModule.durationLabel} · Module{" "}
                 {activeIndex + 1} of {course.modules.length}
@@ -310,7 +310,7 @@ export const TrainingCourse = ({
 
           {/* Module list + resources */}
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl border border-slate-100 p-5">
+            <div className="bg-white rounded-xl border border-slate-100 p-5">
               <h3 className="text-sm font-semibold text-slate-900 mb-3">Modules</h3>
               <div className="space-y-1">
                 {course.modules.map((m, i) => {
@@ -341,7 +341,7 @@ export const TrainingCourse = ({
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-100 p-5">
+            <div className="bg-white rounded-xl border border-slate-100 p-5">
               <h3 className="text-sm font-semibold text-slate-900 mb-3">Resources</h3>
               <div className="space-y-2">
                 {course.resources.map((r) => (
@@ -350,7 +350,7 @@ export const TrainingCourse = ({
               </div>
             </div>
 
-            <div className="bg-slate-900 rounded-2xl p-5 text-white">
+            <div className="bg-slate-900 rounded-xl p-5 text-white">
               <div className="flex items-center gap-2 mb-1.5">
                 <ListChecks className="w-4 h-4 text-emerald-400" />
                 <h3 className="text-sm font-semibold">Quick Assessment</h3>
@@ -381,7 +381,7 @@ export const TrainingCourse = ({
         </div>
       ) : (
         /* Quick assessment */
-        <div className="bg-white rounded-2xl border border-slate-100 p-6 max-w-2xl">
+        <div className="bg-white rounded-xl border border-slate-100 p-6 max-w-2xl">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold text-slate-900">Quick Assessment · {course.title}</h2>
             <button
