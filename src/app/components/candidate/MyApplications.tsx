@@ -340,28 +340,24 @@ export const MyApplicationsPage = () => {
                   key={application._id}
                   className="group bg-white rounded-xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-xl transition-all duration-300 flex flex-col"
                 >
-                  <div className="flex justify-between items-start mb-4 gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-900 font-bold text-sm border border-slate-100 shrink-0">
-                        {department?.department_name?.substring(0, 2).toUpperCase() || "JB"}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-slate-900 leading-tight truncate">
-                          {job?.job_title || "Job"}
-                        </h3>
-                        {department?.department_name && (
-                          <p className="text-xs text-slate-500 mt-0.5 truncate">
-                            {department.department_name}
-                          </p>
-                        )}
-                      </div>
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-sm border border-blue-100 shrink-0">
+                      {department?.department_name?.substring(0, 2).toUpperCase() || "JB"}
                     </div>
-                    <Badge variant={status.variant} className="shrink-0">
-                      {status.label}
-                    </Badge>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-slate-900 leading-snug line-clamp-2">
+                        {job?.job_title || "Job"}
+                      </h3>
+                      {department?.department_name && (
+                        <p className="text-xs text-slate-500 mt-0.5 truncate">
+                          {department.department_name}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs font-medium text-slate-400 mb-4">
+                  <div className="flex items-center flex-wrap gap-x-3 gap-y-1.5 text-xs font-medium text-slate-400 mb-4">
+                    <Badge variant={status.variant}>{status.label}</Badge>
                     {job?.location && (
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" /> {job.location}
