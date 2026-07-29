@@ -37,7 +37,7 @@ export const JobBoardView: React.FC = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100/50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-slate-900 rounded-md flex items-center justify-center">
+            <div className="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center">
                 <ShieldCheck className="w-3.5 h-3.5 text-white" />
             </div>
             <span className="font-semibold text-sm tracking-tight">Workervet</span>
@@ -60,7 +60,7 @@ export const JobBoardView: React.FC = () => {
          
          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-slate-900 mb-6 leading-[0.95] animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
             Find a job that is <br />
-            <span className="text-slate-400">truly rewarding.</span>
+            <span className="text-blue-600">truly rewarding.</span>
          </h1>
          
          <p className="text-lg text-slate-500 max-w-xl mx-auto mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
@@ -75,7 +75,7 @@ export const JobBoardView: React.FC = () => {
                  <input 
                      type="text" 
                      placeholder="Search roles..." 
-                     className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent hover:border-slate-200 focus:border-slate-300 focus:bg-white rounded-2xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all shadow-sm"
+                     className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent hover:border-slate-200 focus:border-blue-400 focus:bg-white rounded-2xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all shadow-sm"
                      value={searchTerm}
                      onChange={(e) => setSearchTerm(e.target.value)}
                  />
@@ -108,7 +108,7 @@ export const JobBoardView: React.FC = () => {
               >
                 <div className="flex justify-between items-start w-full mb-4">
                   <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-900 font-bold text-sm border border-slate-100">
+                     <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-sm border border-blue-100">
                        {(job.department as Department).department_name.substring(0,2).toUpperCase()}
                      </div>
                      <div>

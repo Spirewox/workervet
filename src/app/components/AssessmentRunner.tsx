@@ -133,7 +133,7 @@ export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions,de
       {/* Progress Bar */}
       <div className="w-full bg-slate-100 rounded-full h-2 mb-8 overflow-hidden relative">
         <div 
-          className="bg-indigo-600 h-2 rounded-full transition-all duration-500 ease-in-out" 
+          className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-in-out" 
           style={{ width: `${progress}%` }}
         ></div>
       </div>
@@ -145,8 +145,8 @@ export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions,de
             <p className="text-lg text-slate-800 leading-relaxed font-medium">
               {currentQuestion.scenario}
             </p>
-            <div className="mt-6 p-4 bg-indigo-50/50 rounded-lg border-l-4 border-indigo-600">
-               <h3 className="text-sm font-bold text-indigo-900 uppercase tracking-wider mb-2">Question</h3>
+            <div className="mt-6 p-4 bg-blue-50/50 rounded-lg border-l-4 border-blue-600">
+               <h3 className="text-sm font-bold text-blue-900 uppercase tracking-wider mb-2">Question</h3>
                <p className="text-slate-800 font-medium">{currentQuestion.questionText}</p>
             </div>
           </div>

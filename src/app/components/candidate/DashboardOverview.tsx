@@ -119,7 +119,7 @@ export const DashboardOverviewPage = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Active Assessments</CardTitle>
-          <Briefcase className="h-4 w-4 text-indigo-600" />
+          <Briefcase className="h-4 w-4 text-blue-600" />
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-slate-900">{metric?.active_assessments}</div>
@@ -150,7 +150,7 @@ export const DashboardOverviewPage = () => {
             const isTarget = user?.target_department === assessment.department;
 
             return (
-              <Card key={assessment.assessment_id} className={`transition-all hover:shadow-md ${isTarget && !isPassed ? 'border-indigo-500/50 ring-1 ring-indigo-500/20 bg-indigo-50/10' : ''}`}>
+              <Card key={assessment.assessment_id} className={`transition-all hover:shadow-md ${isTarget && !isPassed ? 'border-blue-500/50 ring-1 ring-blue-500/20 bg-blue-50/10' : ''}`}>
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-lg leading-tight min-h-[3rem] flex items-center">{assessment.department.name}</CardTitle>

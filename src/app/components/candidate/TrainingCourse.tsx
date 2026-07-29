@@ -205,15 +205,15 @@ export const TrainingCourse = ({
             </p>
             <ul className="space-y-2.5 mb-6">
               <li className="flex items-center gap-3 text-sm text-slate-700">
-                <PlayCircle className="w-4 h-4 text-indigo-600 shrink-0" />
+                <PlayCircle className="w-4 h-4 text-blue-600 shrink-0" />
                 {course.modules.length} guided video modules
               </li>
               <li className="flex items-center gap-3 text-sm text-slate-700">
-                <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
+                <FileText className="w-4 h-4 text-blue-600 shrink-0" />
                 {course.resources.length} downloadable resources
               </li>
               <li className="flex items-center gap-3 text-sm text-slate-700">
-                <ListChecks className="w-4 h-4 text-indigo-600 shrink-0" />
+                <ListChecks className="w-4 h-4 text-blue-600 shrink-0" />
                 {course.quiz.length}-question quick assessment
               </li>
             </ul>
@@ -263,7 +263,7 @@ export const TrainingCourse = ({
           </div>
         </div>
         <div className="mt-4">
-          <Progress value={moduleProgress} className="[&_[data-slot=progress-indicator]]:bg-indigo-500" />
+          <Progress value={moduleProgress} className="[&_[data-slot=progress-indicator]]:bg-blue-500" />
           <p className="text-xs text-slate-400 mt-1.5">
             {completedCount} of {course.modules.length} modules completed
           </p>
@@ -329,7 +329,7 @@ export const TrainingCourse = ({
                       ) : !unlocked ? (
                         <Lock className="w-4 h-4 text-slate-300 shrink-0" />
                       ) : i === activeIndex ? (
-                        <PlayCircle className="w-4 h-4 text-indigo-600 shrink-0" />
+                        <PlayCircle className="w-4 h-4 text-blue-600 shrink-0" />
                       ) : (
                         <Circle className="w-4 h-4 text-slate-300 shrink-0" />
                       )}
@@ -430,7 +430,7 @@ export const TrainingCourse = ({
                 <p className="text-xs text-slate-500">This certifies that</p>
                 <p className="text-xl font-bold text-slate-900 mt-0.5">{candidateName}</p>
                 <p className="text-xs text-slate-500 mt-1">has completed</p>
-                <p className="text-base font-semibold text-indigo-600">{course.title}</p>
+                <p className="text-base font-semibold text-blue-600">{course.title}</p>
                 <p className="text-xs text-slate-400 mt-2">
                   Score {scorePercent}% · {dateLabel} · ID {certId}
                 </p>

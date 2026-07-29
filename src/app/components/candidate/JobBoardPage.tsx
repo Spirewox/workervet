@@ -174,7 +174,7 @@ export const JobBoardPage = () => {
                             <Button
                                 disabled 
                                 onClick={(e) => { e.stopPropagation(); handleApply(job); }} 
-                                className="flex-1 bg-slate-900 hover:bg-slate-800"
+                                className="flex-1 bg-blue-600 hover:bg-blue-700"
                             >
                                 Applied
                             </Button>
@@ -182,7 +182,7 @@ export const JobBoardPage = () => {
                             <Button 
                             disabled={applyingJobId === job._id}
                             onClick={(e) => { e.stopPropagation(); handleApply(job); }} 
-                            className="flex-1 bg-slate-900 hover:bg-slate-800"
+                            className="flex-1 bg-blue-600 hover:bg-blue-700"
                             >
                             {applyingJobId === job._id ? 'Applying...' : 'Apply Now'}
                             </Button>
@@ -190,7 +190,7 @@ export const JobBoardPage = () => {
                             <Button 
                             onClick={(e) => { e.stopPropagation(); handleSelectDepartment((job.department as Department)._id); }} 
                             variant="outline" 
-                            className="flex-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                            className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
                             >
                             Take Assessment
                             </Button>

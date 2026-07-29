@@ -106,8 +106,8 @@ export const TrainingCenterPage = () => {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center">
-          <GraduationCap className="w-6 h-6 text-indigo-600" />
+        <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+          <GraduationCap className="w-6 h-6 text-blue-600" />
         </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Training Center</h1>

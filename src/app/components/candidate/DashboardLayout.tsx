@@ -32,7 +32,7 @@ export const DashboardLayout = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
           <div className="flex items-center gap-8">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-slate-900 rounded-md flex items-center justify-center">
+              <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center">
                   <ShieldCheck className="w-5 h-5 text-white" />
               </div>
               <span className="text-lg font-bold text-slate-900 tracking-tight">Workervet</span>

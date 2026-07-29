@@ -36,7 +36,7 @@ const fetchDepartmentQuestions = async (id : string) => {
 // Custom hook
 export const useDepartmentQuestions = (id : string) => {
   return useQuery({
-    queryKey: ["department-questions",], // cache key
+    queryKey: ["department-questions", id], // cache key (id-scoped so switching departments refetches)
     enabled : !!id,
     queryFn: ()=>fetchDepartmentQuestions(id),
     retry : false,

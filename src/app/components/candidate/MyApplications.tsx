@@ -227,8 +227,8 @@ const SkillProfilePanel = () => {
         onClick={() => setOpen((o) => !o)}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
-            <BarChart3 className="w-5 h-5 text-indigo-600" />
+          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+            <BarChart3 className="w-5 h-5 text-blue-600" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Your Skill Profile</h2>

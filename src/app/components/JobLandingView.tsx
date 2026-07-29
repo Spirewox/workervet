@@ -19,6 +19,7 @@ import { useJobs } from '../hooks/useJobs';
 import { Department } from '../interface/settings.interface';
 import { IJob } from '../interface/job.interface';
 import { axiosPost } from '../lib/api';
+import { toast } from 'react-toastify';
 
 export const JobLandingView: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -27,9 +28,10 @@ export const JobLandingView: React.FC = () => {
 
   const {data : jobs, isLoading : JobLoading} = useJobs(!!jobId,{job : jobId})
   const [showShare, setShowShare] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [applied, setApplied] = useState(false);
 
   const job  = useMemo(()=> jobs?.data?.[0] as IJob,[jobs])
-  console.log(job)
   if (JobLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -48,23 +50,42 @@ export const JobLandingView: React.FC = () => {
   }
 
   const isUserCertified = job.is_certified
-  
-  const actionLabel = user 
-      ? (isUserCertified ? "Apply Now" : "Take Assessment") 
-      : "Apply Now"; 
+  const isApplied = applied || !!job.is_applied
+
+  const actionLabel = !user
+      ? "Apply Now"
+      : isApplied
+        ? "Applied"
+        : isUserCertified
+          ? (applying ? "Applying..." : "Apply Now")
+          : "Take Assessment";
 
   const handleAction = async() => {
     if (!user) {
-        // Redirect to login with job context
-        navigate('/login', { state: { job } });
+        // Not logged in — prompt to register; registration starts the exam.
+        navigate('/register', { state: { job } });
         return;
     }
-    
+
     if (isUserCertified) {
-        alert("Application Submitted!");
+        if (isApplied || applying) return;
+        try {
+            setApplying(true);
+            await axiosPost('jobs/application', { job: job._id }, true);
+            toast.success(`Application submitted for ${job.job_title}`);
+            setApplied(true);
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Failed to submit application');
+        } finally {
+            setApplying(false);
+        }
     } else {
-        await axiosPost(`assessment/candidate/departments/${(job.department as Department)._id}/`,{},true)
-        navigate(`/assessment/${encodeURIComponent((job.department as Department)._id )}`);
+        try {
+            await axiosPost(`assessment/candidate/departments/${(job.department as Department)._id}/`,{},true)
+            navigate(`/assessment/${encodeURIComponent((job.department as Department)._id )}`);
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Failed to start assessment');
+        }
     }
   };
 
@@ -80,7 +101,7 @@ export const JobLandingView: React.FC = () => {
        <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100/50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-6 h-6 bg-slate-900 rounded-md flex items-center justify-center">
+            <div className="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center">
                 <ShieldCheck className="w-3.5 h-3.5 text-white" />
             </div>
             <span className="font-semibold text-sm tracking-tight">Workervet</span>
@@ -106,7 +127,9 @@ export const JobLandingView: React.FC = () => {
            <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-500 font-medium">
               <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-slate-400" /> {job.location}</span>
               {job.salary_range && <span className="flex items-center gap-2"> {job.salary_range}</span>}
-              <span className="flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400" /> Posted {new Date(job.createdAt).toLocaleDateString()}</span>
+              {job.createdAt && !isNaN(new Date(job.createdAt).getTime()) && (
+                <span className="flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400" /> Posted {new Date(job.createdAt).toLocaleDateString()}</span>
+              )}
            </div>
         </div>
 
@@ -129,7 +152,7 @@ export const JobLandingView: React.FC = () => {
 
            <div className="space-y-6">
               <div className="sticky top-24 space-y-6">
-                <Button size="lg" onClick={handleAction} className="w-full h-12 text-base shadow-lg shadow-slate-200">
+                <Button size="lg" onClick={handleAction} disabled={applying || isApplied} className="w-full h-12 text-base shadow-lg shadow-slate-200">
                     {actionLabel}
                 </Button>
                 
