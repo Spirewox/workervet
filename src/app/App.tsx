@@ -13,6 +13,15 @@ import { ToastContainer } from 'react-toastify';
 import { DashboardLayout } from './components/candidate/DashboardLayout';
 import { DashboardOverviewPage } from './components/candidate/DashboardOverview';
 import { JobBoardPage } from './components/candidate/JobBoardPage';
+import { MyApplicationsPage } from './components/candidate/MyApplications';
+import { TrainingCenterPage } from './components/candidate/TrainingCenter';
+import { AdminLayout } from './components/admin/AdminLayout';
+import { AdminOverviewPage } from './components/admin/AdminOverview';
+import { AdminCandidatesPage } from './components/admin/AdminCandidates';
+import { AdminCandidateDetailPage } from './components/admin/AdminCandidateDetail';
+import { AdminJobsPage } from './components/admin/AdminJobs';
+import { AdminQuestionsPage } from './components/admin/AdminQuestions';
+import { AdminSettingsPage } from './components/admin/AdminSettings';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -30,22 +39,21 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }
   return <>{children}</>;
 };
 
-// Admin Protected Route
-// const AdminRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-//   const { user,loading } = useAuth();
-//   if (loading) {
-//     return (
-//       <div className="flex h-screen items-center justify-center">
-//         <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
-//       </div>
-//     );
-//   }
-//   if (!user || user.role !== 'admin') {
-//     return <Navigate to="/admin/login" replace />;
-//   }
-
-//   return children;
-// };
+// Admin Protected Route — requires an authenticated user with the admin role.
+const AdminRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
+      </div>
+    );
+  }
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 
 function AppContent() {
   const { logout } = useAuth();
@@ -70,6 +78,8 @@ function AppContent() {
       >
         <Route index element={<DashboardOverviewPage />} />
         <Route path="jobs" element={<JobBoardPage />} />
+        <Route path="applications" element={<MyApplicationsPage />} />
+        <Route path="training" element={<TrainingCenterPage />} />
       </Route>
       {/* <Route path="/dashboard" element={
         <ProtectedRoute>
@@ -89,8 +99,25 @@ function AppContent() {
         </ProtectedRoute>
       } />
 
-      {/* Protected User Routes */}
-      
+      {/* Admin Routes */}
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }
+      >
+        <Route index element={<AdminOverviewPage />} />
+        <Route path="candidates" element={<AdminCandidatesPage />} />
+        <Route path="candidates/:candidateId" element={<AdminCandidateDetailPage />} />
+        <Route path="jobs" element={<AdminJobsPage />} />
+        <Route path="questions" element={<AdminQuestionsPage />} />
+        <Route path="settings" element={<AdminSettingsPage />} />
+      </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/jobs" replace />} />
     </Routes>
   );
 }

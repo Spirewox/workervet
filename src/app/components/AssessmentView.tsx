@@ -30,7 +30,7 @@ export const AssessmentView: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mx-auto mb-4" />
+          <Loader2 className="h-10 w-10 animate-spin text-blue-600 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-slate-900">Preparing Assessment...</h2>
           <p className="text-slate-500 mt-2">Our AI is curating a unique scenario-based test for you.</p>
         </div>

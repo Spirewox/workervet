@@ -1,10 +1,13 @@
-import { Briefcase, MapPin, Share2, ShieldCheck } from "lucide-react";
+import { Briefcase, MapPin, Search, Share2, ShieldCheck, X } from "lucide-react";
 import { useJobs } from "../../hooks/useJobs";
+import { useDepartments } from "../../hooks/useSettings";
 import { IJob } from "../../interface/job.interface";
-import {useState} from "react"
+import {useEffect, useState} from "react"
 import { useNavigate } from "react-router-dom";
 import { Department } from "../../interface/settings.interface";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { NativeSelect } from "../ui/native-select";
 import { toast } from "react-toastify";
 import { axiosPost } from "../../lib/api";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../ui/pagination";
@@ -14,8 +17,33 @@ export const JobBoardPage = () => {
     const limit = 20
     const [jobToShare, setJobToShare] = useState<IJob | null>(null);
     const [applyingJobId, setApplyingJobId] = useState<string | null>(null);
-    
-    const {data : jobs, isLoading : jobsLoading, refetch: refetchJobs} = useJobs(true,{page, limit})
+
+    const [searchInput, setSearchInput] = useState("");
+    const [search, setSearch] = useState("");
+    const [department, setDepartment] = useState("");
+
+    const { data: departments } = useDepartments();
+
+    // Debounce the search box so we don't refetch on every keystroke.
+    useEffect(() => {
+        const handle = setTimeout(() => setSearch(searchInput.trim()), 400);
+        return () => clearTimeout(handle);
+    }, [searchInput]);
+
+    // Any filter change should send us back to the first page.
+    useEffect(() => {
+        setPage(1);
+    }, [search, department]);
+
+    const hasFilters = search !== "" || department !== "";
+
+    const clearFilters = () => {
+        setSearchInput("");
+        setSearch("");
+        setDepartment("");
+    };
+
+    const {data : jobs, isLoading : jobsLoading, refetch: refetchJobs} = useJobs(true,{page, limit, search: search || undefined, department: department || undefined})
 
     const totalPages = jobs?.meta?.totalPages || 1;
 
@@ -65,11 +93,48 @@ export const JobBoardPage = () => {
         </div>
         </div>
 
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <Input
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="Search jobs by title or keyword..."
+                    className="pl-9 h-10"
+                />
+            </div>
+            <NativeSelect
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                className="sm:w-56"
+            >
+                <option value="">All departments</option>
+                {departments?.map((dept) => (
+                    <option key={dept._id} value={dept._id}>
+                        {dept.department_name}
+                    </option>
+                ))}
+            </NativeSelect>
+            {hasFilters && (
+                <Button variant="outline" onClick={clearFilters} className="h-10 shrink-0">
+                    <X className="w-4 h-4 mr-1" /> Clear
+                </Button>
+            )}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {jobs?.data?.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border border-dashed border-slate-200 col-span-full">
             <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500">No open positions at the moment.</p>
+            <p className="text-slate-500 mb-4">
+                {hasFilters ? "No jobs match your filters." : "No open positions at the moment."}
+            </p>
+            {hasFilters && (
+                <Button variant="outline" onClick={clearFilters}>
+                    Clear filters
+                </Button>
+            )}
         </div>
         ) : (<>
             {jobs?.data?.map(job => {
@@ -77,7 +142,7 @@ export const JobBoardPage = () => {
                 return (
                 <div 
                     key={job._id} 
-                    className="group bg-white rounded-2xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-xl transition-all duration-300 flex flex-col relative cursor-pointer"
+                    className="group bg-white rounded-xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-xl transition-all duration-300 flex flex-col relative cursor-pointer"
                     onClick={() => navigate(`/jobs/${job._id}`)}
                 >
                     <div className="flex justify-between items-start mb-4">
@@ -109,7 +174,7 @@ export const JobBoardPage = () => {
                             <Button
                                 disabled 
                                 onClick={(e) => { e.stopPropagation(); handleApply(job); }} 
-                                className="flex-1 bg-slate-900 hover:bg-slate-800"
+                                className="flex-1 bg-blue-600 hover:bg-blue-700"
                             >
                                 Applied
                             </Button>
@@ -117,7 +182,7 @@ export const JobBoardPage = () => {
                             <Button 
                             disabled={applyingJobId === job._id}
                             onClick={(e) => { e.stopPropagation(); handleApply(job); }} 
-                            className="flex-1 bg-slate-900 hover:bg-slate-800"
+                            className="flex-1 bg-blue-600 hover:bg-blue-700"
                             >
                             {applyingJobId === job._id ? 'Applying...' : 'Apply Now'}
                             </Button>
@@ -125,7 +190,7 @@ export const JobBoardPage = () => {
                             <Button 
                             onClick={(e) => { e.stopPropagation(); handleSelectDepartment((job.department as Department)._id); }} 
                             variant="outline" 
-                            className="flex-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                            className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
                             >
                             Take Assessment
                             </Button>

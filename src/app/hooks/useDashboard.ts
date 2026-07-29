@@ -49,7 +49,10 @@ export interface CandidateAssessmentListRes{
   "result": "pass" | "fail",
   "status": 'in_progress' | 'submitted' | 'expired',
   "submitted_at": Date | null,
-  "expires_at": "2026-02-10T15:02:11.000Z"
+  "expires_at": "2026-02-10T15:02:11.000Z",
+  // Optional per-skill score breakdown for this assessment, when the backend
+  // provides it.
+  skills?: { skill_name: string; percentage: number }[]
 }
 
 

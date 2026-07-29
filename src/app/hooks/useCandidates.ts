@@ -7,6 +7,7 @@ export interface CandidateAct{
     "full_name": string,
     "email": string,
     "phone": string,
+    status ?: string,
     "target_department": string | Department,
     "cv": {
         "filename": string,

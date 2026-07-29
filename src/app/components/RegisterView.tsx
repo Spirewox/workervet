@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { User } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { PasswordInput } from './PasswordInput';
+import { LogoMark } from './Logo';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -48,13 +49,22 @@ export const RegisterView: React.FC = () => {
 
   const { data: departments } = useDepartments();
 
-  const handleAuthSuccess = (user: User) => {
+  const handleAuthSuccess = async (user: User) => {
     login(user);
-    if (jobContext) {
-      navigate(`/jobs/${jobContext?._id}`);
-    } else {
-      navigate('/dashboard');
+    const deptId = (jobContext?.department as Department)?._id || department;
+    // If they registered against a job/department, drop them straight into
+    // the assessment for it.
+    if (deptId) {
+      try {
+        await axiosPost(`assessment/candidate/departments/${deptId}`, {}, true);
+        navigate(`/assessment/${encodeURIComponent(deptId)}`);
+        return;
+      } catch {
+        navigate(jobContext ? `/jobs/${jobContext._id}` : '/dashboard');
+        return;
+      }
     }
+    navigate('/dashboard');
   };
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
@@ -129,9 +139,7 @@ export const RegisterView: React.FC = () => {
             </button>
           )}
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center shadow-lg">
-              <ShieldCheck className="w-6 h-6 text-white" />
-            </div>
+            <LogoMark className="w-12 h-12" />
           </div>
           <CardTitle className="text-2xl">{renderTitle()}</CardTitle>
           <CardDescription>Complete your profile to start assessments.</CardDescription>
@@ -247,7 +255,7 @@ export const RegisterView: React.FC = () => {
             <p className="text-sm text-slate-500">Already have an account?</p>
             <Button
               variant="outline"
-              className="w-full text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+              className="w-full text-blue-600 border-blue-200 hover:bg-blue-50"
               onClick={() =>
                 navigate('/login', jobContext ? { state: { job: jobContext } } : undefined)
               }

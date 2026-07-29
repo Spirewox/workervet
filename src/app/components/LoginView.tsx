@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { User } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { PasswordInput } from './PasswordInput';
+import { LogoMark } from './Logo';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -120,9 +121,7 @@ export const LoginView: React.FC = () => {
             </button>
           )}
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center shadow-lg">
-              <ShieldCheck className="w-6 h-6 text-white" />
-            </div>
+            <LogoMark className="w-12 h-12" />
           </div>
           <CardTitle className="text-2xl">{renderTitle()}</CardTitle>
           <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
@@ -151,7 +150,7 @@ export const LoginView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => { setLoginStep('email'); setPassword(''); }}
-                    className="text-xs text-indigo-600 hover:underline"
+                    className="text-xs text-blue-600 hover:underline"
                   >
                     Change
                   </button>
@@ -182,7 +181,7 @@ export const LoginView: React.FC = () => {
             <p className="text-sm text-slate-500">Don't have an account yet?</p>
             <Button
               variant="outline"
-              className="w-full text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+              className="w-full text-blue-600 border-blue-200 hover:bg-blue-50"
               onClick={() =>
                 navigate('/register', jobContext ? { state: { job: jobContext } } : undefined)
               }
@@ -203,7 +202,7 @@ export const LoginView: React.FC = () => {
         </CardContent>
         {/* <CardFooter className="flex justify-center border-t border-slate-100 pt-6">
           <p className="text-xs text-slate-400">
-            Administrator? <button className="text-indigo-600 hover:underline" onClick={() => navigate('/admin/login')}>Login here</button>
+            Administrator? <button className="text-blue-600 hover:underline" onClick={() => navigate('/admin/login')}>Login here</button>
           </p>
         </CardFooter> */}
       </Card>

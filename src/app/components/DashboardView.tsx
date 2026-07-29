@@ -70,7 +70,7 @@ export const DashboardView: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
           <div className="flex items-center gap-8">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-slate-900 rounded-md flex items-center justify-center">
+              <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center">
                  <ShieldCheck className="w-5 h-5 text-white" />
               </div>
               <span className="text-lg font-bold text-slate-900 tracking-tight">Workervet</span>
@@ -184,7 +184,7 @@ export const DashboardView: React.FC = () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Active Assessments</CardTitle>
-                  <Briefcase className="h-4 w-4 text-indigo-600" />
+                  <Briefcase className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-slate-900">{relevantDepartments.length}</div>
@@ -216,7 +216,7 @@ export const DashboardView: React.FC = () => {
                     const isTarget = user.targetDepartment === dept;
 
                     return (
-                      <Card key={dept} className={`transition-all hover:shadow-md ${isTarget && !isPassed ? 'border-indigo-500/50 ring-1 ring-indigo-500/20 bg-indigo-50/10' : ''}`}>
+                      <Card key={dept} className={`transition-all hover:shadow-md ${isTarget && !isPassed ? 'border-blue-500/50 ring-1 ring-blue-500/20 bg-blue-50/10' : ''}`}>
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
                             <CardTitle className="text-lg leading-tight min-h-[3rem] flex items-center">{dept}</CardTitle>
@@ -286,7 +286,7 @@ export const DashboardView: React.FC = () => {
                   return (
                     <div 
                       key={job.id} 
-                      className="group bg-white rounded-2xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-xl transition-all duration-300 flex flex-col relative cursor-pointer"
+                      className="group bg-white rounded-xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-xl transition-all duration-300 flex flex-col relative cursor-pointer"
                       onClick={() => navigate(`/jobs/${job.id}`)}
                     >
                         <div className="flex justify-between items-start mb-4">
@@ -316,7 +316,7 @@ export const DashboardView: React.FC = () => {
                            {isCertified ? (
                               <Button 
                                 onClick={(e) => { e.stopPropagation(); handleApply(job); }} 
-                                className="flex-1 bg-slate-900 hover:bg-slate-800"
+                                className="flex-1 bg-blue-600 hover:bg-blue-700"
                               >
                                 Apply Now
                               </Button>
@@ -324,7 +324,7 @@ export const DashboardView: React.FC = () => {
                               <Button 
                                 onClick={(e) => { e.stopPropagation(); handleSelectDepartment(job.department); }} 
                                 variant="outline" 
-                                className="flex-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                                className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
                               >
                                 Take Assessment
                               </Button>
