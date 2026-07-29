@@ -195,17 +195,17 @@ const ResultBreakdown = ({
       )}
 
       {!inProgress && !passed && (
-        <div className="pt-1 grid grid-cols-2 gap-2">
+        <div className="pt-1 flex flex-col gap-2">
+          <Button className="w-full" onClick={handleRetake} disabled={retaking || !departmentId}>
+            <RotateCcw className="w-3.5 h-3.5" />
+            {retaking ? "Starting assessment..." : "Retake Assessment"}
+          </Button>
           <Button
-            size="sm"
             variant="outline"
+            className="w-full"
             onClick={() => navigate("/dashboard/training")}
           >
-            <GraduationCap className="w-3.5 h-3.5 mr-1.5" /> Train
-          </Button>
-          <Button size="sm" onClick={handleRetake} disabled={retaking || !departmentId}>
-            <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-            {retaking ? "Starting..." : "Retake"}
+            <GraduationCap className="w-3.5 h-3.5" /> Train Weak Areas
           </Button>
         </div>
       )}

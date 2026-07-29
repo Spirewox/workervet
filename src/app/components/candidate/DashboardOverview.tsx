@@ -222,12 +222,12 @@ export const DashboardOverviewPage = () => {
                         className="w-full"
                       />
                     ) : isFailed ? (
-                      <div className="w-full grid grid-cols-2 gap-2">
-                        <Button variant="outline" onClick={() => navigate('/dashboard/training')}>
-                          <GraduationCap className="w-4 h-4 mr-1.5" /> Train
+                      <div className="w-full flex flex-col gap-2">
+                        <Button className="w-full" onClick={() => handleSelectDepartment(assessment.department._id)}>
+                          Retake Assessment <ArrowRight className="w-4 h-4" />
                         </Button>
-                        <Button onClick={() => handleSelectDepartment(assessment.department._id)}>
-                          Retake <ArrowRight className="w-4 h-4 ml-1.5" />
+                        <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard/training')}>
+                          <GraduationCap className="w-4 h-4" /> Train Weak Areas
                         </Button>
                       </div>
                     ) : (
