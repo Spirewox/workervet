@@ -4,10 +4,11 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "../ui/button";
 import {
-  LayoutDashboard, Briefcase, LogOut, ShieldCheck, FileText,
+  LayoutDashboard, Briefcase, LogOut, FileText,
   GraduationCap, Menu, X, Search,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { Logo } from "../Logo";
 
 const NAV = [
   { path: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
@@ -46,14 +47,8 @@ export const DashboardLayout = () => {
   const Sidebar = (
     <div className="flex flex-col h-full w-64 bg-white border-r border-slate-200">
       {/* Brand */}
-      <div className="h-16 flex items-center gap-2.5 px-5 border-b border-slate-100 shrink-0">
-        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-          <ShieldCheck className="w-4.5 h-4.5 text-white" />
-        </div>
-        <div className="leading-tight">
-          <p className="font-bold text-slate-900 tracking-tight">Workervet</p>
-          <p className="text-[11px] text-slate-400 -mt-0.5">Candidate</p>
-        </div>
+      <div className="h-16 flex items-center px-5 border-b border-slate-100 shrink-0">
+        <Logo markClass="w-7 h-7" textClass="text-base" sub="Candidate" />
         <button onClick={() => setMobileOpen(false)} className="md:hidden ml-auto text-slate-400 hover:text-slate-700">
           <X className="w-5 h-5" />
         </button>

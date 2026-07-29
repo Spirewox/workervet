@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { User } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { PasswordInput } from './PasswordInput';
+import { LogoMark } from './Logo';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -120,9 +121,7 @@ export const LoginView: React.FC = () => {
             </button>
           )}
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg">
-              <ShieldCheck className="w-6 h-6 text-white" />
-            </div>
+            <LogoMark className="w-12 h-12" />
           </div>
           <CardTitle className="text-2xl">{renderTitle()}</CardTitle>
           <CardDescription>Enter your credentials to access your dashboard.</CardDescription>

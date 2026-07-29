@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useJobs } from '../hooks/useJobs';
 import { Department } from '../interface/settings.interface';
+import { Logo } from './Logo';
 
 export const JobBoardView: React.FC = () => {
   const navigate = useNavigate();
@@ -36,12 +37,7 @@ export const JobBoardView: React.FC = () => {
       {/* Navigation - Minimal */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100/50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center">
-                <ShieldCheck className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="font-semibold text-sm tracking-tight">Workervet</span>
-          </div>
+          <Logo markClass="w-6 h-6" textClass="text-sm" />
           <button 
             onClick={handleLogin} 
             className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1.5"
