@@ -64,6 +64,21 @@ const ScoreBreakdown = ({ skills }: { skills?: { skill_name: string; percentage:
   );
 };
 
+const StatTile = ({ label, value, sub, icon, tint }: {
+  label: string; value: React.ReactNode; sub: string; icon: React.ReactNode; tint: string;
+}) => (
+  <Card className="border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+    <CardContent className="p-6">
+      <div className="flex items-start justify-between">
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${tint}`}>{icon}</div>
+      </div>
+      <p className="text-3xl font-bold text-slate-900 mt-3 tracking-tight">{value}</p>
+      <p className="text-xs text-slate-400 mt-1">{sub}</p>
+    </CardContent>
+  </Card>
+);
+
 export const DashboardOverviewPage = () => {
   const {user} = useAuth()
   const navigate = useNavigate();
@@ -94,38 +109,9 @@ export const DashboardOverviewPage = () => {
 
     {/* Stats */}
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <Card className="bg-slate-900 text-white border-none shadow-md">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-200">Certifications Earned</CardTitle>
-          <Award className="h-4 w-4 text-emerald-400" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold">{metric?.departments_verified}</div>
-          <p className="text-xs text-slate-400 mt-1">Departments Verified</p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Assessments Passed</CardTitle>
-          <CheckCircle className="h-4 w-4 text-emerald-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold text-slate-900">{metric?.assessments_passed}</div>
-          <p className="text-xs text-slate-500 mt-1">Successfully completed</p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Active Assessments</CardTitle>
-          <Briefcase className="h-4 w-4 text-blue-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold text-slate-900">{metric?.active_assessments}</div>
-          <p className="text-xs text-slate-500 mt-1">In your queue</p>
-        </CardContent>
-      </Card>
+      <StatTile label="Certifications Earned" value={metric?.departments_verified ?? 0} sub="Departments verified" tint="bg-emerald-50 text-emerald-600" icon={<Award className="h-5 w-5" />} />
+      <StatTile label="Assessments Passed" value={metric?.assessments_passed ?? 0} sub="Successfully completed" tint="bg-blue-50 text-blue-600" icon={<CheckCircle className="h-5 w-5" />} />
+      <StatTile label="Active Assessments" value={metric?.active_assessments ?? 0} sub="In your queue" tint="bg-amber-50 text-amber-600" icon={<Briefcase className="h-5 w-5" />} />
     </div>
 
     {/* Departments Grid */}
@@ -152,14 +138,19 @@ export const DashboardOverviewPage = () => {
             return (
               <Card key={assessment.assessment_id} className={`transition-all hover:shadow-md ${isTarget && !isPassed ? 'border-blue-500/50 ring-1 ring-blue-500/20 bg-blue-50/10' : ''}`}>
                 <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg leading-tight min-h-[3rem] flex items-center">{assessment.department.name}</CardTitle>
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs border border-blue-100 shrink-0">
+                        {assessment.department.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <CardTitle className="text-base leading-tight">{assessment.department.name}</CardTitle>
+                    </div>
                     {isTarget && !isPassed && (
-                      <Badge variant="secondary" className="ml-2 whitespace-nowrap">Target</Badge>
+                      <Badge variant="secondary" className="whitespace-nowrap shrink-0">Target</Badge>
                     )}
                   </div>
-                  <CardDescription>
-                    Evaluate skills in Trust, Integrity, Ethics & Communication.
+                  <CardDescription className="mt-3">
+                    Evaluate skills in Trust, Integrity, Ethics &amp; Communication.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pb-3">
