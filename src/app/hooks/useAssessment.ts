@@ -11,9 +11,10 @@ export interface CandidateAssessment {
       index : number,
       question_id: string,
       question_text: string,
-      options: string,
+      options: { _id?: string; content: string }[],
       skill : string,
-      scenario : string
+      scenario : string,
+      time_seconds?: number,
     }[],
 }
 

@@ -1,28 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Question, Department } from '../types';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { cn } from './ui/utils';
 import { ArrowRight, Clock, AlertTriangle } from 'lucide-react';
 import { useSkills } from '../hooks/useSettings';
+import { CandidateAssessment } from '../hooks/useAssessment';
+import { formatCountdown, questionTimeSeconds } from '../lib/questionTime';
 
 interface AssessmentRunnerProps {
-  questions: Question[];
+  questions: CandidateAssessment['questions'];
   department : string;
   onComplete: (answers: { questionId: string; selectedOptionIndex: number; isCorrect: boolean }[]) => void;
   onCancel: () => void;
 }
-
-const DEFAULT_TIME_PER_QUESTION = 20;
 
 export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions,department, onComplete, onCancel }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<{question : string, selected_option : string}[]>([]);
   const {data : skillData} = useSkills()
   const currentQuestion = questions?.[currentIndex];
-  // Use specific time limit or default
-  const timeLimit = currentQuestion?.timeLimit || DEFAULT_TIME_PER_QUESTION;
+  const timeLimit = questionTimeSeconds(currentQuestion);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
 
   const totalQuestions = questions?.length;
@@ -70,22 +68,22 @@ export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions,de
 
   useEffect(() => {
     if (currentQuestion) {
-      setTimeLeft(currentQuestion.timeLimit || DEFAULT_TIME_PER_QUESTION);
+      setTimeLeft(questionTimeSeconds(currentQuestion));
     }
   }, [currentIndex, currentQuestion]);
 
   useEffect(() => {
-    if (timeLeft === 0) {
-      handleNext();
-      return;
-    }
-
     const timer = setInterval(() => {
-      setTimeLeft(prev => Math.max(0, prev - 1));
+      setTimeLeft(prev => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, currentIndex]);
+  }, [currentIndex]);
+
+  useEffect(() => {
+    if (timeLeft !== 0 || !questions?.length) return;
+    handleNext();
+  }, [timeLeft]);
 
   if (!currentQuestion) {
     return <div className="p-8 text-center">No questions available.</div>;
@@ -124,7 +122,7 @@ export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions,de
                   : "bg-white border-slate-200 text-slate-700"
             )}>
                 {isAlarm ? <AlertTriangle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
-                <span>00:{timeLeft.toString().padStart(2, '0')}</span>
+                <span>{formatCountdown(timeLeft)}</span>
             </div>
             <Button variant="ghost" onClick={onCancel}>Cancel</Button>
         </div>
@@ -147,7 +145,7 @@ export const AssessmentRunner: React.FC<AssessmentRunnerProps> = ({ questions,de
             </p>
             <div className="mt-6 p-4 bg-indigo-50/50 rounded-lg border-l-4 border-indigo-600">
                <h3 className="text-sm font-bold text-indigo-900 uppercase tracking-wider mb-2">Question</h3>
-               <p className="text-slate-800 font-medium">{currentQuestion.questionText}</p>
+               <p className="text-slate-800 font-medium">{currentQuestion.question_text}</p>
             </div>
           </div>
 
